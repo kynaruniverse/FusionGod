@@ -2,92 +2,110 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>KYNAR // FIELD OPS</title>
   <link rel="stylesheet" href="../assets/css/core.css">
   <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       background: #000;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      overflow: hidden;
+      font-family: var(--font-terminal);
     }
 
-    .game-header {
+    /* HUD */
+    .hud {
       position: fixed;
       top: 0; left: 0; right: 0;
-      height: var(--nav-height);
+      height: 48px;
+      background: rgba(6,6,10,0.95);
+      border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 var(--space-lg);
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
+      padding: 0 16px;
       z-index: 100;
     }
 
-    .game-header__back {
-      font-family: var(--font-terminal);
-      font-size: var(--text-xs);
-      color: var(--text-dim);
-      text-decoration: none;
-      letter-spacing: 0.1em;
-      transition: color var(--transition-fast);
-    }
+    .hud__left { display: flex; align-items: center; gap: 20px; }
+    .hud__back { font-size: 11px; color: var(--text-dim); text-decoration: none; letter-spacing: 0.1em; transition: color 0.2s; }
+    .hud__back:hover { color: var(--silver); }
+    .hud__level { font-size: 11px; color: var(--accent); letter-spacing: 0.2em; }
 
-    .game-header__back:hover { color: var(--silver); }
+    .hud__center { display: flex; gap: 20px; align-items: center; }
+    .hud__stat { font-size: 11px; color: var(--text-dim); letter-spacing: 0.1em; }
+    .hud__stat span { color: var(--silver); }
 
-    .game-hud {
+    /* Ability bar */
+    .hud__ability {
       display: flex;
-      gap: var(--space-lg);
       align-items: center;
-    }
-
-    .game-hud__item {
-      font-family: var(--font-terminal);
-      font-size: var(--text-xs);
+      gap: 8px;
+      font-size: 11px;
       color: var(--text-dim);
       letter-spacing: 0.1em;
     }
 
-    .game-hud__item span { color: var(--silver); }
-
-    /* Canvas container */
-    .game-container {
-      position: relative;
-      margin-top: var(--nav-height);
+    .ability-bar {
+      width: 80px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
     }
 
-    canvas {
+    .ability-bar__fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.1s linear;
+    }
+
+    /* Canvas */
+    #gameCanvas {
       display: block;
+      margin-top: 48px;
       image-rendering: pixelated;
     }
 
     /* Mobile controls */
-    .mobile-controls {
+    .mobile-dpad {
       position: fixed;
-      bottom: var(--space-lg);
-      left: 50%;
-      transform: translateX(-50%);
+      bottom: 80px;
+      left: 20px;
       display: grid;
-      grid-template-columns: repeat(3, 52px);
-      grid-template-rows: repeat(2, 52px);
-      gap: 6px;
+      grid-template-columns: repeat(3, 48px);
+      grid-template-rows: repeat(2, 48px);
+      gap: 4px;
+      z-index: 100;
+    }
+
+    .mobile-action {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
       z-index: 100;
     }
 
     @media (min-width: 768px) {
-      .mobile-controls { display: none; }
+      .mobile-dpad, .mobile-action { display: none; }
     }
 
-    .mobile-btn {
-      background: rgba(192,21,42,0.2);
-      border: 1px solid var(--accent-dim);
+    .dpad-btn, .action-btn {
+      background: rgba(192,21,42,0.15);
+      border: 1px solid rgba(192,21,42,0.3);
       color: var(--silver);
-      font-size: 1.2rem;
+      font-size: 1rem;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -95,358 +113,815 @@
       user-select: none;
       -webkit-user-select: none;
       touch-action: none;
-      transition: background var(--transition-fast);
-      border-radius: 2px;
+      border-radius: 4px;
+      transition: background 0.1s;
     }
 
-    .mobile-btn:active,
-    .mobile-btn.pressed {
-      background: var(--accent-dim);
+    .dpad-btn:active, .dpad-btn.pressed,
+    .action-btn:active, .action-btn.pressed {
+      background: rgba(192,21,42,0.4);
     }
 
-    .mobile-btn--up    { grid-column: 2; grid-row: 1; }
-    .mobile-btn--left  { grid-column: 1; grid-row: 2; }
-    .mobile-btn--down  { grid-column: 2; grid-row: 2; }
-    .mobile-btn--right { grid-column: 3; grid-row: 2; }
+    .dpad-btn--up    { grid-column: 2; grid-row: 1; }
+    .dpad-btn--left  { grid-column: 1; grid-row: 2; }
+    .dpad-btn--down  { grid-column: 2; grid-row: 2; }
+    .dpad-btn--right { grid-column: 3; grid-row: 2; }
 
-    /* Overlay screens */
-    .game-overlay {
+    .action-btn {
+      width: 56px; height: 56px;
+      font-size: 0.7rem;
+      letter-spacing: 0.05em;
+      font-family: var(--font-terminal);
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .action-btn span { font-size: 0.6rem; color: var(--text-dim); }
+
+    /* OVERLAY SCREENS */
+    .overlay {
       position: fixed;
       inset: 0;
-      background: rgba(6,6,10,0.95);
+      background: rgba(6,6,10,0.97);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: var(--space-lg);
       z-index: 200;
-      font-family: var(--font-terminal);
+      padding: 20px;
+      text-align: center;
     }
 
-    .game-overlay.hidden { display: none; }
+    .overlay.hidden { display: none; }
 
-    .game-overlay__title {
+    .overlay__eyebrow {
+      font-size: 11px;
+      color: var(--accent);
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .overlay__title {
       font-family: var(--font-game);
-      font-size: clamp(1rem, 3vw, 1.5rem);
+      font-size: clamp(1rem, 3vw, 1.4rem);
       color: var(--text-bright);
+      margin-bottom: 24px;
+      line-height: 1.4;
+    }
+
+    .overlay__title span { color: var(--accent); }
+
+    .overlay__body {
+      font-family: var(--font-terminal);
+      font-size: 13px;
+      color: var(--text-dim);
+      max-width: 480px;
+      line-height: 1.9;
+      letter-spacing: 0.03em;
+      margin-bottom: 32px;
+      border-left: 2px solid var(--accent-dim);
+      padding-left: 16px;
+      text-align: left;
+    }
+
+    .overlay__body strong { color: var(--silver); }
+
+    .overlay__controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+
+    .ctrl-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .ctrl-key {
+      background: var(--surface-2);
+      border: 1px solid var(--border-bright);
+      border-bottom: 3px solid var(--border-bright);
+      padding: 6px 10px;
+      font-family: var(--font-terminal);
+      font-size: 12px;
+      color: var(--silver);
+      min-width: 36px;
       text-align: center;
+    }
+
+    .ctrl-label {
+      font-size: 10px;
+      color: var(--text-dim);
       letter-spacing: 0.05em;
     }
 
-    .game-overlay__title span { color: var(--accent); }
-
-    .game-overlay__msg {
-      font-size: var(--text-sm);
-      color: var(--text-dim);
-      text-align: center;
-      letter-spacing: 0.1em;
-      max-width: 400px;
-      line-height: 1.8;
-    }
-
-    .game-overlay__btn {
+    .overlay__btn {
       font-family: var(--font-game);
-      font-size: var(--text-xs);
+      font-size: 12px;
       color: var(--bg);
       background: var(--accent);
       border: none;
-      padding: var(--space-md) var(--space-xl);
+      padding: 14px 32px;
       cursor: pointer;
       letter-spacing: 0.1em;
-      transition: background var(--transition-fast);
+      transition: all 0.2s;
     }
 
-    .game-overlay__btn:hover { background: var(--wrong); }
+    .overlay__btn:hover { background: var(--wrong); transform: scale(1.02); }
+
+    .overlay__btn--secondary {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      font-family: var(--font-terminal);
+      font-size: 11px;
+      margin-top: 12px;
+    }
+
+    .overlay__btn--secondary:hover {
+      background: var(--surface);
+      color: var(--silver);
+      transform: none;
+    }
+
+    /* Collect notification */
+    .collect-notif {
+      position: fixed;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface);
+      border: 1px solid var(--accent-dim);
+      border-left: 3px solid var(--accent);
+      padding: 8px 16px;
+      font-size: 11px;
+      color: var(--silver);
+      letter-spacing: 0.1em;
+      z-index: 150;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .collect-notif.visible { opacity: 1; }
+
+    /* Level complete bar */
+    .progress-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--border);
+      z-index: 100;
+    }
+
+    .progress-bar__fill {
+      height: 100%;
+      background: var(--accent);
+      transition: width 0.3s ease;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Header HUD -->
-  <header class="game-header">
-    <a href="index.html" class="game-header__back">← Abort Mission</a>
-    <div class="game-hud">
-      <div class="game-hud__item">HP: <span id="hudHP">100</span></div>
-      <div class="game-hud__item">OBJ: <span id="hudObj">REACH EXTRACT</span></div>
-      <div class="game-hud__item hide-mobile">ZONE: <span>VAEL OUTER</span></div>
+  <!-- HUD -->
+  <header class="hud">
+    <div class="hud__left">
+      <a href="index.html" class="hud__back">← Abort</a>
+      <div class="hud__level" id="hudLevel">LEVEL 1 — THE UNDERLIFT</div>
+    </div>
+    <div class="hud__center">
+      <div class="hud__stat">FILES: <span id="hudFiles">0/3</span></div>
+      <div class="hud__stat hide-mobile">DIST: <span id="hudDist">—</span></div>
+    </div>
+    <div class="hud__ability">
+      SURGE
+      <div class="ability-bar">
+        <div class="ability-bar__fill" id="abilityBar" style="width:100%"></div>
+      </div>
+      <span id="abilityReady" style="color:var(--accent)">READY</span>
     </div>
   </header>
 
-  <!-- Game canvas -->
-  <div class="game-container">
-    <canvas id="gameCanvas"></canvas>
-  </div>
+  <!-- Canvas -->
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- Progress bar -->
+  <div class="progress-bar"><div class="progress-bar__fill" id="progressFill" style="width:0%"></div></div>
+
+  <!-- Collect notification -->
+  <div class="collect-notif" id="collectNotif"></div>
 
   <!-- Mobile controls -->
-  <div class="mobile-controls" id="mobileControls" aria-label="Game controls">
-    <button class="mobile-btn mobile-btn--up"    id="btnUp"    aria-label="Move up">▲</button>
-    <button class="mobile-btn mobile-btn--left"  id="btnLeft"  aria-label="Move left">◀</button>
-    <button class="mobile-btn mobile-btn--down"  id="btnDown"  aria-label="Move down">▼</button>
-    <button class="mobile-btn mobile-btn--right" id="btnRight" aria-label="Move right">▶</button>
+  <div class="mobile-dpad">
+    <button class="dpad-btn dpad-btn--up"    id="btnUp">▲</button>
+    <button class="dpad-btn dpad-btn--left"  id="btnLeft">◀</button>
+    <button class="dpad-btn dpad-btn--down"  id="btnDown">▼</button>
+    <button class="dpad-btn dpad-btn--right" id="btnRight">▶</button>
   </div>
 
-  <!-- Win overlay -->
-  <div class="game-overlay hidden" id="winOverlay">
-    <div class="game-overlay__title">EXTRACTION <span>SUCCESSFUL</span></div>
-    <p class="game-overlay__msg">You reached the extraction point. Mission complete. For now.</p>
-    <button class="game-overlay__btn" onclick="restartGame()">REDEPLOY</button>
+  <div class="mobile-action">
+    <button class="action-btn" id="btnSurge">⚡<span>SURGE</span></button>
+    <button class="action-btn" id="btnInteract">E<span>USE</span></button>
   </div>
 
-  <!-- Lose overlay -->
-  <div class="game-overlay hidden" id="loseOverlay">
-    <div class="game-overlay__title">OPERATIVE <span style="color:var(--wrong)">DOWN</span></div>
-    <p class="game-overlay__msg">You were detected and eliminated. The mission failed. Try again.</p>
-    <button class="game-overlay__btn" onclick="restartGame()">RETRY</button>
+  <!-- BRIEFING OVERLAY (Level 1) -->
+  <div class="overlay" id="briefingOverlay">
+    <div class="overlay__eyebrow">MISSION BRIEF // LEVEL 01</div>
+    <div class="overlay__title">THE <span>UNDERLIFT</span><br>London, UK</div>
+    <div class="overlay__body">
+      <strong>Situation:</strong> Something happened to you three hours ago.
+      You don't have a name for it yet. You were on the tube when the lights went out —
+      not a power failure, something else — and when they came back on,
+      you were standing at the end of the carriage with no memory of moving.
+      People were staring. You ran.<br><br>
+      <strong>Objective:</strong> You need to understand what happened.
+      Three files are hidden in this section of the Underlift.
+      Find them before the agents do.<br><br>
+      <strong>Warning:</strong> Not everyone down here is a civilian.
+      Red figures are Black Table agents. They blend in.
+      If they get close, your cover is blown.
+    </div>
+    <div class="overlay__controls">
+      <div class="ctrl-item"><div class="ctrl-key">W A S D</div><div class="ctrl-label">Move</div></div>
+      <div class="ctrl-item"><div class="ctrl-key">SHIFT</div><div class="ctrl-label">Surge</div></div>
+      <div class="ctrl-item"><div class="ctrl-key">E</div><div class="ctrl-label">Interact</div></div>
+      <div class="ctrl-item"><div class="ctrl-key">↑↓←→</div><div class="ctrl-label">Also move</div></div>
+    </div>
+    <button class="overlay__btn" onclick="startLevel()">ENTER THE UNDERLIFT</button>
+  </div>
+
+  <!-- LEVEL COMPLETE OVERLAY -->
+  <div class="overlay hidden" id="levelCompleteOverlay">
+    <div class="overlay__eyebrow" id="lcEyebrow">LEVEL COMPLETE</div>
+    <div class="overlay__title" id="lcTitle">FILES <span>RECOVERED</span></div>
+    <div class="overlay__body" id="lcBody"></div>
+    <button class="overlay__btn" id="lcBtn">CONTINUE</button>
+  </div>
+
+  <!-- WIN OVERLAY -->
+  <div class="overlay hidden" id="winOverlay">
+    <div class="overlay__eyebrow">MISSION COMPLETE</div>
+    <div class="overlay__title">YOU <span>ESCAPED</span><br>THE UNDERLIFT</div>
+    <div class="overlay__body">
+      You have the files. You don't fully understand them yet —
+      but you know enough to know that whoever is looking for you
+      is not going to stop.<br><br>
+      The Kynar Universe continues. More levels coming.
+    </div>
+    <button class="overlay__btn" onclick="location.href='index.html'">BACK TO BRIEFING</button>
+  </div>
+
+  <!-- CAUGHT OVERLAY -->
+  <div class="overlay hidden" id="caughtOverlay">
+    <div class="overlay__eyebrow" style="color:var(--wrong)">COMPROMISED</div>
+    <div class="overlay__title">AGENT <span style="color:var(--wrong)">CONTACT</span></div>
+    <div class="overlay__body">
+      A Black Table agent made you. You ran but they had backup.
+      You lost the files. Start again — you know the layout now.
+    </div>
+    <button class="overlay__btn" onclick="restartLevel()">TRY AGAIN</button>
+    <button class="overlay__btn overlay__btn--secondary" onclick="location.href='index.html'">Abort Mission</button>
   </div>
 
   <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
+  // ============================================================
+  // GAME ENGINE
+  // ============================================================
+  const canvas = document.getElementById('gameCanvas');
+  const ctx    = canvas.getContext('2d');
 
-    // Responsive canvas size
-    function setCanvasSize() {
-      const maxW = Math.min(window.innerWidth, 800);
-      const maxH = window.innerHeight - 52; // nav height
-      const size = Math.min(maxW, maxH);
-      canvas.width  = size;
-      canvas.height = size;
+  // Sizing
+  function resize() {
+    const W = window.innerWidth;
+    const H = window.innerHeight - 48;
+    canvas.width  = W;
+    canvas.height = H;
+  }
+  resize();
+  window.addEventListener('resize', () => { resize(); if (gameRunning) initLevel(currentLevel); });
+
+  // Tile size — isometric feel via scaled tiles
+  const TILE = 36;
+
+  // Colours
+  const C = {
+    bg:       '#06060a',
+    floor:    '#0e0e16',
+    floorAlt: '#10101a',
+    wall:     '#1a1a28',
+    wallTop:  '#22223a',
+    player:   '#c8d0d8',
+    civilian: '#4a5568',
+    agent:    '#c0152a',
+    file:     '#00e5ff',
+    exit:     '#00ff88',
+    surge:    'rgba(200,208,216,0.3)',
+    detect:   'rgba(192,21,42,0.08)',
+  };
+
+  // ============================================================
+  // LEVELS
+  // ============================================================
+  const LEVELS = [
+    {
+      id: 1,
+      name: 'LEVEL 1 — THE UNDERLIFT',
+      map: [
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,0,1,1,1,0,1,0,1,0,1,1,0,1,1,1,0,1,1,1,0,1],
+        [1,0,1,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,1,0,1],
+        [1,0,1,0,1,1,1,1,1,1,0,1,1,1,0,1,1,1,0,1,0,1],
+        [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1],
+        [1,1,1,0,1,1,1,0,0,1,1,1,0,1,1,1,0,1,1,1,1,1],
+        [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+        [1,0,1,1,1,0,1,1,1,0,1,1,1,0,0,1,0,1,1,0,0,1],
+        [1,0,0,0,1,0,0,0,1,0,0,0,1,0,1,1,0,0,1,0,0,1],
+        [1,1,1,0,1,1,1,0,1,0,1,0,1,0,0,0,0,1,1,0,1,1],
+        [1,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1],
+        [1,0,1,1,1,1,1,1,1,0,1,1,1,0,1,1,1,1,1,1,0,1],
+        [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,3,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      ],
+      playerStart: { x: 1, y: 1 },
+      files: [
+        { x: 5,  y: 3,  label: 'FILE 01', text: 'Incident log — Northern Line, 22:47. Subject displayed anomalous displacement. Flagged for monitoring.' },
+        { x: 10, y: 7,  label: 'FILE 02', text: 'Bleed activity in sector 4 elevated 340% over baseline. Cause unidentified. Black Table team deployed.' },
+        { x: 17, y: 11, label: 'FILE 03', text: 'Subject has no prior contact with the layer. Spontaneous awakening. First documented case in this sector. Priority: LOCATE.' },
+      ],
+      agents: [
+        { x: 8,  y: 5,  patrolPath: [{x:8,y:5},{x:12,y:5},{x:12,y:8},{x:8,y:8}], speed: 0.4 },
+        { x: 3,  y: 10, patrolPath: [{x:3,y:10},{x:3,y:12},{x:6,y:12},{x:6,y:10}], speed: 0.35 },
+        { x: 15, y: 3,  patrolPath: [{x:15,y:3},{x:18,y:3},{x:18,y:6},{x:15,y:6}], speed: 0.45 },
+      ],
+      civilians: [
+        { x: 4,  y: 7,  moveDir: 1, axis: 'x', range: 3, speed: 0.2 },
+        { x: 14, y: 9,  moveDir: 1, axis: 'y', range: 2, speed: 0.15 },
+        { x: 9,  y: 12, moveDir:-1, axis: 'x', range: 4, speed: 0.25 },
+        { x: 17, y: 5,  moveDir: 1, axis: 'y', range: 3, speed: 0.18 },
+      ],
+      briefingId: 'briefingOverlay',
+      completeText: 'You found them. Three files from a Black Table field operative — your name is in all three. They knew before you did. Now you need to get out before they realise you have these.',
+      completeBtn: 'EXIT THE UNDERLIFT',
     }
-    setCanvasSize();
+  ];
 
-    const TILE  = 32;
-    const COLS  = Math.floor(canvas.width  / TILE);
-    const ROWS  = Math.floor(canvas.height / TILE);
+  // ============================================================
+  // GAME STATE
+  // ============================================================
+  let gameRunning  = false;
+  let currentLevel = 0;
+  let map, player, agents, civilians, files, collected;
+  let abilityCharge = 1.0; // 0 to 1
+  let abilityCooldown = false;
+  let surgeActive = false;
+  let surgeTimer  = 0;
+  const SURGE_DURATION = 2000; // ms
+  const SURGE_RECHARGE = 5000; // ms
 
-    // Colours
-    const C = {
-      bg:       '#06060a',
-      wall:     '#1e1e2e',
-      wallLine: '#2e2e4e',
-      floor:    '#0e0e16',
-      player:   '#c8d0d8',
-      enemy:    '#c0152a',
-      extract:  '#00ff88',
-      hpBar:    '#c0152a',
-      hpBg:     '#1e1e2e',
+  // Camera
+  let cam = { x: 0, y: 0 };
+
+  // Input
+  const keys = {};
+  document.addEventListener('keydown', e => {
+    keys[e.key] = true;
+    if (e.key === 'e' || e.key === 'E') tryInteract();
+    if ((e.key === 'Shift') && gameRunning) activateSurge();
+    if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+  });
+  document.addEventListener('keyup', e => { keys[e.key] = false; });
+
+  const mobileKeys = { up:false, down:false, left:false, right:false };
+
+  function setupMobileBtn(id, dir) {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    ['touchstart','mousedown'].forEach(ev => btn.addEventListener(ev, e => {
+      e.preventDefault(); mobileKeys[dir] = true; btn.classList.add('pressed');
+    }));
+    ['touchend','mouseup','mouseleave'].forEach(ev => btn.addEventListener(ev, () => {
+      mobileKeys[dir] = false; btn.classList.remove('pressed');
+    }));
+  }
+
+  setupMobileBtn('btnUp',    'up');
+  setupMobileBtn('btnDown',  'down');
+  setupMobileBtn('btnLeft',  'left');
+  setupMobileBtn('btnRight', 'right');
+
+  document.getElementById('btnSurge')?.addEventListener('touchstart', e => { e.preventDefault(); activateSurge(); });
+  document.getElementById('btnSurge')?.addEventListener('mousedown',  () => activateSurge());
+  document.getElementById('btnInteract')?.addEventListener('touchstart', e => { e.preventDefault(); tryInteract(); });
+  document.getElementById('btnInteract')?.addEventListener('mousedown', () => tryInteract());
+
+  // ============================================================
+  // LEVEL INIT
+  // ============================================================
+  function initLevel(idx) {
+    const lvl = LEVELS[idx];
+    map = lvl.map;
+
+    const ROWS = map.length;
+    const COLS = map[0].length;
+
+    player = {
+      x: lvl.playerStart.x,
+      y: lvl.playerStart.y,
+      px: lvl.playerStart.x * TILE,
+      py: lvl.playerStart.y * TILE,
+      moveTimer: 0,
     };
 
-    // Map: 0=floor, 1=wall, 2=extract
-    const MAP_TEMPLATE = [
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
-      [1,0,1,1,0,0,1,0,1,1,1,0,1,1,0,1,1,1,0,1],
-      [1,0,1,0,0,0,0,0,0,0,1,0,0,1,0,0,0,1,0,1],
-      [1,0,1,0,1,1,1,1,1,0,1,1,0,1,1,1,0,1,0,1],
-      [1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,1],
-      [1,1,1,0,1,0,1,0,1,1,1,1,1,0,0,1,0,1,1,1],
-      [1,0,0,0,0,0,1,0,0,0,0,0,1,0,1,1,0,0,0,1],
-      [1,0,1,1,1,0,1,1,1,0,1,0,1,0,0,0,0,1,0,1],
-      [1,0,0,0,1,0,0,0,1,0,1,0,0,0,1,0,0,1,0,1],
-      [1,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,0,1,0,1],
-      [1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
-      [1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,0,1],
-      [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1],
-    ];
+    files = lvl.files.map(f => ({ ...f, collected: false }));
+    collected = 0;
 
-    // Pad/trim map to fit
-    function buildMap() {
-      const map = [];
-      for (let r = 0; r < ROWS; r++) {
-        const row = [];
-        for (let c = 0; c < COLS; c++) {
-          const tr = MAP_TEMPLATE[r % MAP_TEMPLATE.length];
-          row.push(tr ? (tr[c % tr.length] ?? 1) : 1);
-        }
-        map.push(row);
+    agents = lvl.agents.map(a => ({
+      ...a,
+      patrolIdx: 0,
+      fx: a.x * TILE,
+      fy: a.y * TILE,
+      tx: a.patrolPath[0].x * TILE,
+      ty: a.patrolPath[0].y * TILE,
+    }));
+
+    civilians = lvl.civilians.map(c => ({
+      ...c,
+      ox: c.x, oy: c.y,
+      fx: c.x * TILE,
+      fy: c.y * TILE,
+      t: Math.random() * Math.PI * 2,
+    }));
+
+    abilityCharge = 1.0;
+    abilityCooldown = false;
+    surgeActive = false;
+    surgeTimer = 0;
+
+    updateHUD();
+  }
+
+  function isWall(tx, ty) {
+    if (ty < 0 || ty >= map.length || tx < 0 || tx >= map[0].length) return true;
+    return map[ty][tx] === 1;
+  }
+
+  // ============================================================
+  // PLAYER
+  // ============================================================
+  const BASE_MOVE_DELAY = 130;
+  const SURGE_MOVE_DELAY = 55;
+
+  function updatePlayer(dt) {
+    player.moveTimer += dt;
+    const moveDelay = surgeActive ? SURGE_MOVE_DELAY : BASE_MOVE_DELAY;
+
+    if (player.moveTimer >= moveDelay) {
+      let nx = player.x, ny = player.y;
+      if (keys['ArrowUp']    || keys['w'] || keys['W'] || mobileKeys.up)    ny--;
+      if (keys['ArrowDown']  || keys['s'] || keys['S'] || mobileKeys.down)  ny++;
+      if (keys['ArrowLeft']  || keys['a'] || keys['A'] || mobileKeys.left)  nx--;
+      if (keys['ArrowRight'] || keys['d'] || keys['D'] || mobileKeys.right) nx++;
+
+      if ((nx !== player.x || ny !== player.y) && !isWall(nx, ny)) {
+        player.x = nx;
+        player.y = ny;
+        player.moveTimer = 0;
       }
-      // Place extract at bottom-right accessible cell
-      map[ROWS-2][COLS-2] = 2;
-      return map;
     }
 
-    let map, player, enemies, hp, gameActive;
+    // Smooth pixel position
+    player.px += (player.x * TILE - player.px) * 0.3;
+    player.py += (player.y * TILE - player.py) * 0.3;
 
-    function initGame() {
-      map = buildMap();
-      player = { x: 1, y: 1, px: TILE, py: TILE };
-      hp = 100;
-      gameActive = true;
-      document.getElementById('hudHP').textContent = hp;
-      document.getElementById('hudObj').textContent = 'REACH EXTRACT';
-      document.getElementById('winOverlay').classList.add('hidden');
-      document.getElementById('loseOverlay').classList.add('hidden');
+    // Camera follows player
+    cam.x = player.px - canvas.width  / 2 + TILE / 2;
+    cam.y = player.py - canvas.height / 2 + TILE / 2;
 
-      // Enemies — patrol along walls
-      enemies = [
-        { x: 5,  y: 5,  dir: 1, axis: 'x', speed: 0.03, t: 0 },
-        { x: 12, y: 3,  dir: 1, axis: 'y', speed: 0.025, t: 0 },
-        { x: 8,  y: 9,  dir:-1, axis: 'x', speed: 0.035, t: 0 },
-        { x: 3,  y: 11, dir: 1, axis: 'y', speed: 0.02,  t: 0 },
-      ].filter(e => e.x < COLS && e.y < ROWS);
+    // Check exit (tile 3)
+    if (map[player.y] && map[player.y][player.x] === 3 && collected >= files.length) {
+      triggerLevelComplete();
+    }
+  }
+
+  // ============================================================
+  // SURGE ABILITY
+  // ============================================================
+  function activateSurge() {
+    if (!gameRunning || abilityCooldown || abilityCharge < 1) return;
+    surgeActive    = true;
+    surgeTimer     = SURGE_DURATION;
+    abilityCooldown = true;
+    abilityCharge  = 0;
+    document.getElementById('abilityReady').textContent = 'ACTIVE';
+    document.getElementById('abilityReady').style.color = 'var(--silver)';
+  }
+
+  function updateSurge(dt) {
+    if (surgeActive) {
+      surgeTimer -= dt;
+      if (surgeTimer <= 0) {
+        surgeActive = false;
+        document.getElementById('abilityReady').textContent = 'CHARGING';
+        document.getElementById('abilityReady').style.color = 'var(--text-dim)';
+      }
     }
 
-    // Input
-    const keys = {};
-    document.addEventListener('keydown', e => { keys[e.key] = true; });
-    document.addEventListener('keyup',   e => { keys[e.key] = false; });
+    if (abilityCooldown && !surgeActive) {
+      abilityCharge += dt / SURGE_RECHARGE;
+      if (abilityCharge >= 1) {
+        abilityCharge   = 1;
+        abilityCooldown = false;
+        document.getElementById('abilityReady').textContent = 'READY';
+        document.getElementById('abilityReady').style.color = 'var(--accent)';
+      }
+    }
 
-    const mobileKeys = { up: false, down: false, left: false, right: false };
+    document.getElementById('abilityBar').style.width = (abilityCharge * 100) + '%';
+  }
 
-    ['btnUp','btnDown','btnLeft','btnRight'].forEach(id => {
-      const btn = document.getElementById(id);
-      const dir = id.replace('btn','').toLowerCase();
-      ['touchstart','mousedown'].forEach(evt => {
-        btn.addEventListener(evt, e => { e.preventDefault(); mobileKeys[dir] = true; btn.classList.add('pressed'); });
-      });
-      ['touchend','mouseup','mouseleave'].forEach(evt => {
-        btn.addEventListener(evt, e => { mobileKeys[dir] = false; btn.classList.remove('pressed'); });
-      });
+  // ============================================================
+  // AGENTS
+  // ============================================================
+  function updateAgents(dt) {
+    agents.forEach(agent => {
+      const target = agent.patrolPath[agent.patrolIdx];
+      const tx = target.x * TILE;
+      const ty = target.y * TILE;
+      const dx = tx - agent.fx;
+      const dy = ty - agent.fy;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+
+      const spd = (agent.speed * TILE * dt) / 16;
+
+      if (dist < 2) {
+        agent.patrolIdx = (agent.patrolIdx + 1) % agent.patrolPath.length;
+      } else {
+        agent.fx += (dx / dist) * spd;
+        agent.fy += (dy / dist) * spd;
+      }
+
+      // Detection — agents can't detect during surge
+      if (!surgeActive) {
+        const pdx = player.px - agent.fx;
+        const pdy = player.py - agent.fy;
+        const pdist = Math.sqrt(pdx*pdx + pdy*pdy);
+        if (pdist < TILE * 1.8) {
+          triggerCaught();
+        }
+      }
+    });
+  }
+
+  // ============================================================
+  // CIVILIANS
+  // ============================================================
+  function updateCivilians(dt) {
+    civilians.forEach(c => {
+      c.t += dt * c.speed * 0.001;
+      const offset = Math.sin(c.t) * c.range * TILE;
+      if (c.axis === 'x') {
+        c.fx = c.ox * TILE + offset;
+        c.fy = c.oy * TILE;
+      } else {
+        c.fx = c.ox * TILE;
+        c.fy = c.oy * TILE + offset;
+      }
+    });
+  }
+
+  // ============================================================
+  // INTERACT
+  // ============================================================
+  function tryInteract() {
+    if (!gameRunning) return;
+    files.forEach((f, i) => {
+      if (!f.collected && Math.abs(f.x - player.x) <= 1 && Math.abs(f.y - player.y) <= 1) {
+        f.collected = true;
+        collected++;
+        showNotif(f.label + ' RECOVERED: ' + f.text.slice(0, 50) + '...');
+        updateHUD();
+      }
+    });
+  }
+
+  function showNotif(text) {
+    const el = document.getElementById('collectNotif');
+    el.textContent = text;
+    el.classList.add('visible');
+    clearTimeout(el._timer);
+    el._timer = setTimeout(() => el.classList.remove('visible'), 3000);
+  }
+
+  // ============================================================
+  // HUD
+  // ============================================================
+  function updateHUD() {
+    const lvl = LEVELS[currentLevel];
+    document.getElementById('hudLevel').textContent = lvl.name;
+    document.getElementById('hudFiles').textContent = collected + '/' + files.length;
+
+    const progress = collected / files.length * 80;
+    document.getElementById('progressFill').style.width = progress + '%';
+
+    // Distance to nearest file
+    let nearest = Infinity;
+    files.forEach(f => {
+      if (!f.collected) {
+        const d = Math.abs(f.x - player.x) + Math.abs(f.y - player.y);
+        if (d < nearest) nearest = d;
+      }
+    });
+    document.getElementById('hudDist').textContent = nearest === Infinity
+      ? (map[player.y]?.[player.x] === 3 ? 'EXIT' : 'CLEAR')
+      : nearest + ' TILES';
+  }
+
+  // ============================================================
+  // RENDER
+  // ============================================================
+  function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    ctx.translate(-Math.round(cam.x), -Math.round(cam.y));
+
+    const ROWS = map.length;
+    const COLS = map[0].length;
+
+    // Draw map tiles
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const cell = map[r][c];
+        const x = c * TILE, y = r * TILE;
+
+        if (cell === 1) {
+          // Wall with isometric top face
+          ctx.fillStyle = C.wall;
+          ctx.fillRect(x, y, TILE, TILE);
+          ctx.fillStyle = C.wallTop;
+          ctx.fillRect(x + 1, y + 1, TILE - 2, 8);
+          ctx.strokeStyle = 'rgba(46,46,78,0.5)';
+          ctx.lineWidth = 0.5;
+          ctx.strokeRect(x + 0.5, y + 0.5, TILE - 1, TILE - 1);
+        } else if (cell === 3) {
+          // Exit
+          ctx.fillStyle = C.floor;
+          ctx.fillRect(x, y, TILE, TILE);
+          const pulse = collected >= files.length ? (0.4 + 0.3 * Math.sin(Date.now() / 300)) : 0.15;
+          ctx.fillStyle = `rgba(0,255,136,${pulse})`;
+          ctx.fillRect(x + 4, y + 4, TILE - 8, TILE - 8);
+          ctx.fillStyle = collected >= files.length ? C.exit : 'rgba(0,255,136,0.3)';
+          ctx.font = '6px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('EXIT', x + TILE/2, y + TILE/2 + 2);
+        } else {
+          // Floor — alternate pattern
+          ctx.fillStyle = (r + c) % 2 === 0 ? C.floor : C.floorAlt;
+          ctx.fillRect(x, y, TILE, TILE);
+        }
+      }
+    }
+
+    // Draw files
+    files.forEach(f => {
+      if (f.collected) return;
+      const x = f.x * TILE, y = f.y * TILE;
+      const nearby = Math.abs(f.x - player.x) <= 1 && Math.abs(f.y - player.y) <= 1;
+      const pulse = 0.5 + 0.3 * Math.sin(Date.now() / 400);
+
+      ctx.fillStyle = `rgba(0,229,255,${pulse * 0.3})`;
+      ctx.fillRect(x + 2, y + 2, TILE - 4, TILE - 4);
+
+      ctx.fillStyle = nearby ? C.file : 'rgba(0,229,255,0.6)';
+      ctx.font = '9px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('FILE', x + TILE/2, y + TILE/2 - 2);
+      ctx.font = '7px monospace';
+      ctx.fillText('[E]', x + TILE/2, y + TILE/2 + 8);
     });
 
-    function isWall(tx, ty) {
-      if (tx < 0 || ty < 0 || tx >= COLS || ty >= ROWS) return true;
-      return map[ty][tx] === 1;
+    // Civilians
+    civilians.forEach(c => {
+      ctx.fillStyle = C.civilian;
+      ctx.beginPath();
+      ctx.arc(c.fx + TILE/2, c.fy + TILE/2, TILE/2 - 8, 0, Math.PI*2);
+      ctx.fill();
+    });
+
+    // Agents — detection radius
+    agents.forEach(a => {
+      const radius = TILE * 1.8;
+      ctx.fillStyle = C.detect;
+      ctx.beginPath();
+      ctx.arc(a.fx + TILE/2, a.fy + TILE/2, radius, 0, Math.PI*2);
+      ctx.fill();
+
+      ctx.fillStyle = C.agent;
+      ctx.beginPath();
+      ctx.arc(a.fx + TILE/2, a.fy + TILE/2, TILE/2 - 6, 0, Math.PI*2);
+      ctx.fill();
+
+      // Agent marker
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.font = '8px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('▲', a.fx + TILE/2, a.fy + TILE/2 + 3);
+    });
+
+    // Player
+    if (surgeActive) {
+      // Surge glow
+      ctx.fillStyle = C.surge;
+      ctx.beginPath();
+      ctx.arc(player.px + TILE/2, player.py + TILE/2, TILE * 0.9, 0, Math.PI*2);
+      ctx.fill();
     }
 
-    let moveTimer = 0;
-    const MOVE_DELAY = 120; // ms between moves
+    ctx.fillStyle = C.player;
+    ctx.fillRect(player.px + 6, player.py + 6, TILE - 12, TILE - 12);
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(player.px + 12, player.py + 12, TILE - 24, TILE - 24);
 
-    function update(dt) {
-      if (!gameActive) return;
+    ctx.restore();
+  }
 
-      // Player movement
-      moveTimer += dt;
-      if (moveTimer >= MOVE_DELAY) {
-        let nx = player.x, ny = player.y;
-        if ((keys['ArrowUp']    || keys['w'] || keys['W'] || mobileKeys.up)    && !isWall(player.x, player.y-1)) ny--;
-        if ((keys['ArrowDown']  || keys['s'] || keys['S'] || mobileKeys.down)  && !isWall(player.x, player.y+1)) ny++;
-        if ((keys['ArrowLeft']  || keys['a'] || keys['A'] || mobileKeys.left)  && !isWall(player.x-1, player.y)) nx--;
-        if ((keys['ArrowRight'] || keys['d'] || keys['D'] || mobileKeys.right) && !isWall(player.x+1, player.y)) nx++;
-        if (nx !== player.x || ny !== player.y) {
-          player.x = nx;
-          player.y = ny;
-          moveTimer = 0;
-        }
-      }
+  // ============================================================
+  // GAME LOOP
+  // ============================================================
+  let lastTime = 0;
+  let gameRunning = false;
 
-      // Check win
-      if (map[player.y] && map[player.y][player.x] === 2) {
-        gameActive = false;
-        document.getElementById('winOverlay').classList.remove('hidden');
-        return;
-      }
+  function loop(ts) {
+    const dt = Math.min(ts - lastTime, 50);
+    lastTime = ts;
 
-      // Enemy movement
-      enemies.forEach(e => {
-        e.t += e.speed;
-        const bounce = Math.sin(e.t * Math.PI * 2);
-        if (e.axis === 'x') e.drawX = (e.x + bounce * 1.5) * TILE;
-        else                 e.drawY = (e.y + bounce * 1.5) * TILE;
-
-        // Collision with player
-        const ex = Math.round((e.drawX ?? e.x * TILE) / TILE);
-        const ey = Math.round((e.drawY ?? e.y * TILE) / TILE);
-        if (Math.abs(ex - player.x) <= 1 && Math.abs(ey - player.y) <= 1) {
-          hp = Math.max(0, hp - 0.3);
-          document.getElementById('hudHP').textContent = Math.ceil(hp);
-          if (hp <= 0) {
-            gameActive = false;
-            document.getElementById('loseOverlay').classList.remove('hidden');
-          }
-        }
-      });
+    if (gameRunning) {
+      updatePlayer(dt);
+      updateAgents(dt);
+      updateCivilians(dt);
+      updateSurge(dt);
+      updateHUD();
     }
 
-    function drawTile(tx, ty, colour) {
-      ctx.fillStyle = colour;
-      ctx.fillRect(tx * TILE, ty * TILE, TILE, TILE);
-    }
-
-    function render() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = C.bg;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Draw map
-      for (let r = 0; r < ROWS; r++) {
-        for (let c = 0; c < COLS; c++) {
-          const cell = map[r] ? map[r][c] : 1;
-          if (cell === 1) {
-            ctx.fillStyle = C.wall;
-            ctx.fillRect(c*TILE, r*TILE, TILE, TILE);
-            ctx.strokeStyle = C.wallLine;
-            ctx.lineWidth = 0.5;
-            ctx.strokeRect(c*TILE+0.5, r*TILE+0.5, TILE-1, TILE-1);
-          } else if (cell === 2) {
-            // Extract point — pulsing green
-            ctx.fillStyle = C.floor;
-            ctx.fillRect(c*TILE, r*TILE, TILE, TILE);
-            const pulse = 0.4 + 0.3 * Math.sin(Date.now() / 300);
-            ctx.fillStyle = `rgba(0,255,136,${pulse})`;
-            ctx.fillRect(c*TILE+6, r*TILE+6, TILE-12, TILE-12);
-            // Label
-            ctx.fillStyle = C.extract;
-            ctx.font = '7px monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText('EXIT', c*TILE + TILE/2, r*TILE + TILE/2 + 3);
-          } else {
-            ctx.fillStyle = C.floor;
-            ctx.fillRect(c*TILE, r*TILE, TILE, TILE);
-          }
-        }
-      }
-
-      // Enemies
-      enemies.forEach(e => {
-        const ex = e.drawX ?? e.x * TILE;
-        const ey = e.drawY ?? e.y * TILE;
-        ctx.fillStyle = C.enemy;
-        ctx.beginPath();
-        ctx.arc(ex + TILE/2, ey + TILE/2, TILE/2 - 6, 0, Math.PI*2);
-        ctx.fill();
-        // Detection radius
-        ctx.strokeStyle = 'rgba(192,21,42,0.15)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(ex + TILE/2, ey + TILE/2, TILE * 1.5, 0, Math.PI*2);
-        ctx.stroke();
-      });
-
-      // Player
-      ctx.fillStyle = C.player;
-      ctx.fillRect(player.x*TILE+6, player.y*TILE+6, TILE-12, TILE-12);
-      // Player dot
-      ctx.fillStyle = C.bg;
-      ctx.fillRect(player.x*TILE+12, player.y*TILE+12, TILE-24, TILE-24);
-
-      // HP bar (top-left of canvas)
-      const barW = 100;
-      ctx.fillStyle = C.hpBg;
-      ctx.fillRect(8, 8, barW, 6);
-      ctx.fillStyle = hp > 50 ? C.player : C.hpBar;
-      ctx.fillRect(8, 8, barW * (hp/100), 6);
-    }
-
-    let lastTime = 0;
-    function loop(ts) {
-      const dt = ts - lastTime;
-      lastTime = ts;
-      update(dt);
-      render();
-      requestAnimationFrame(loop);
-    }
-
-    function restartGame() {
-      initGame();
-    }
-
-    initGame();
+    render();
     requestAnimationFrame(loop);
+  }
 
-    // Resize
-    window.addEventListener('resize', () => {
-      setCanvasSize();
-    });
+  // ============================================================
+  // FLOW CONTROL
+  // ============================================================
+  function startLevel() {
+    document.getElementById('briefingOverlay').classList.add('hidden');
+    gameRunning = true;
+  }
+
+  function triggerLevelComplete() {
+    if (!gameRunning) return;
+    gameRunning = false;
+    const lvl = LEVELS[currentLevel];
+    const overlay = document.getElementById('levelCompleteOverlay');
+    document.getElementById('lcBody').textContent = lvl.completeText;
+    document.getElementById('lcBtn').textContent  = lvl.completeBtn;
+    document.getElementById('lcBtn').onclick = () => {
+      if (currentLevel + 1 < LEVELS.length) {
+        currentLevel++;
+        initLevel(currentLevel);
+        overlay.classList.add('hidden');
+        gameRunning = true;
+      } else {
+        overlay.classList.add('hidden');
+        document.getElementById('winOverlay').classList.remove('hidden');
+      }
+    };
+    overlay.classList.remove('hidden');
+  }
+
+  function triggerCaught() {
+    if (!gameRunning) return;
+    gameRunning = false;
+    document.getElementById('caughtOverlay').classList.remove('hidden');
+  }
+
+  function restartLevel() {
+    document.getElementById('caughtOverlay').classList.add('hidden');
+    initLevel(currentLevel);
+    gameRunning = true;
+  }
+
+  // ============================================================
+  // START
+  // ============================================================
+  initLevel(0);
+  requestAnimationFrame(loop);
   </script>
 </body>
 </html>
