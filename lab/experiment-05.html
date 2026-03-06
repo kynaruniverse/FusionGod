@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KYNAR LAB // EXP-005</title>
+  <link rel="stylesheet" href="../assets/css/core.css">
+  <style>
+    body { background: var(--bg); overflow: hidden; height: 100vh; cursor: crosshair; }
+    canvas { position: fixed; inset: 0; }
+
+    .exp-header {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: var(--nav-height);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 var(--space-lg);
+      background: linear-gradient(180deg, rgba(6,6,10,0.9) 0%, transparent 100%);
+      z-index: 10;
+    }
+
+    .exp-header__info { display: flex; flex-direction: column; gap: 2px; }
+    .exp-header__id { font-family: var(--font-terminal); font-size: var(--text-xs); color: var(--accent); letter-spacing: 0.2em; }
+    .exp-header__name { font-family: var(--font-ui); font-size: var(--text-sm); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-bright); }
+    .exp-back { font-family: var(--font-terminal); font-size: var(--text-xs); color: var(--text-dim); text-decoration: none; letter-spacing: 0.1em; transition: color 0.2s; }
+    .exp-back:hover { color: var(--silver); }
+
+    .hint {
+      position: fixed; bottom: var(--space-lg); left: 50%; transform: translateX(-50%);
+      font-family: var(--font-terminal); font-size: var(--text-xs);
+      color: var(--text-dim); letter-spacing: 0.15em; z-index: 10;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+
+  <header class="exp-header">
+    <div class="exp-header__info">
+      <div class="exp-header__id">EXP-005</div>
+      <div class="exp-header__name">Geo Engine</div>
+    </div>
+    <a href="index.html" class="exp-back">← Back to Lab</a>
+  </header>
+
+  <p class="hint">Click to regenerate</p>
+
+  <script>
+    const canvas = document.getElementById('c');
+    const ctx    = canvas.getContext('2d');
+    let W, H, shapes = [], t = 0;
+
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', () => { resize(); generate(); });
+
+    // Random helpers
+    const r = (a, b) => Math.random() * (b - a) + a;
+    const ri = (a, b) => Math.floor(r(a, b));
+    const pick = arr => arr[ri(0, arr.length)];
+
+    const PALETTE = [
+      'rgba(192,21,42,',
+      'rgba(200,208,216,',
+      'rgba(30,30,46,',
+      'rgba(255,0,68,',
+    ];
+
+    class Shape {
+      constructor() { this.reset(); }
+
+      reset() {
+        this.cx     = r(0, W);
+        this.cy     = r(0, H);
+        this.sides  = pick([3, 4, 5, 6, 8]);
+        this.radius = r(20, Math.min(W, H) * 0.18);
+        this.rot    = r(0, Math.PI * 2);
+        this.rotSpd = r(-0.003, 0.003);
+        this.col    = pick(PALETTE);
+        this.alpha  = r(0.04, 0.25);
+        this.stroke = Math.random() > 0.5;
+        this.fill   = Math.random() > 0.3;
+        this.drift  = { x: r(-0.15, 0.15), y: r(-0.1, 0.1) };
+        this.scale  = 1;
+        this.scaleSpd = r(-0.001, 0.001);
+        this.life   = r(200, 600);
+        this.age    = 0;
+      }
+
+      update() {
+        this.rot   += this.rotSpd;
+        this.cx    += this.drift.x;
+        this.cy    += this.drift.y;
+        this.scale += this.scaleSpd;
+        if (this.scale < 0.5 || this.scale > 1.5) this.scaleSpd *= -1;
+        this.age++;
+        if (this.age > this.life) this.reset();
+      }
+
+      draw() {
+        const fade = Math.min(1, Math.min(this.age / 30, (this.life - this.age) / 30));
+        const a = this.alpha * fade;
+        if (a <= 0) return;
+
+        ctx.save();
+        ctx.translate(this.cx, this.cy);
+        ctx.rotate(this.rot);
+        ctx.scale(this.scale, this.scale);
+
+        ctx.beginPath();
+        for (let i = 0; i < this.sides; i++) {
+          const angle = (i / this.sides) * Math.PI * 2;
+          const x = Math.cos(angle) * this.radius;
+          const y = Math.sin(angle) * this.radius;
+          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+
+        if (this.fill) {
+          ctx.fillStyle = this.col + a.toFixed(3) + ')';
+          ctx.fill();
+        }
+
+        if (this.stroke) {
+          ctx.strokeStyle = this.col + (a * 2).toFixed(3) + ')';
+          ctx.lineWidth = r(0.5, 2);
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+    }
+
+    function generate() {
+      const count = Math.floor(W * H / 18000);
+      shapes = Array.from({ length: Math.max(12, Math.min(count, 40)) }, () => new Shape());
+    }
+
+    generate();
+
+    canvas.addEventListener('click', () => { t = 0; generate(); });
+
+    function loop() {
+      ctx.fillStyle = 'rgba(6,6,10,0.04)';
+      ctx.fillRect(0, 0, W, H);
+
+      t++;
+      shapes.forEach(s => { s.update(); s.draw(); });
+
+      requestAnimationFrame(loop);
+    }
+
+    loop();
+  </script>
+</body>
+</html>

@@ -51,13 +51,8 @@
       gap: var(--space-md);
     }
 
-    @media (min-width: 640px) {
-      .lab-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-
-    @media (min-width: 1024px) {
-      .lab-grid { grid-template-columns: repeat(3, 1fr); }
-    }
+    @media (min-width: 640px) { .lab-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1024px) { .lab-grid { grid-template-columns: repeat(3, 1fr); } }
 
     .lab-file {
       background: var(--surface);
@@ -72,11 +67,15 @@
       transition: all var(--transition-mid);
       opacity: 0;
       animation: fadeUp 0.5s ease forwards;
+      cursor: pointer;
     }
 
-    .lab-file:nth-child(1) { animation-delay: 0.2s; }
-    .lab-file:nth-child(2) { animation-delay: 0.3s; }
-    .lab-file:nth-child(3) { animation-delay: 0.4s; }
+    .lab-file:nth-child(1)  { animation-delay: 0.15s; }
+    .lab-file:nth-child(2)  { animation-delay: 0.2s; }
+    .lab-file:nth-child(3)  { animation-delay: 0.25s; }
+    .lab-file:nth-child(4)  { animation-delay: 0.3s; }
+    .lab-file:nth-child(5)  { animation-delay: 0.35s; }
+    .lab-file:nth-child(6)  { animation-delay: 0.4s; }
 
     .lab-file::after {
       content: '';
@@ -89,14 +88,8 @@
       transform-origin: left;
     }
 
-    .lab-file:hover {
-      border-color: var(--border-bright);
-      background: var(--surface-2);
-    }
-
-    .lab-file:hover::after {
-      transform: scaleX(1);
-    }
+    .lab-file:hover { border-color: var(--border-bright); background: var(--surface-2); }
+    .lab-file:hover::after { transform: scaleX(1); }
 
     .lab-file__num {
       font-family: var(--font-terminal);
@@ -110,7 +103,14 @@
       font-size: var(--text-lg);
       font-weight: 700;
       color: var(--text-bright);
-      letter-spacing: 0.02em;
+    }
+
+    .lab-file__type {
+      font-family: var(--font-terminal);
+      font-size: var(--text-xs);
+      color: var(--accent);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
     }
 
     .lab-file__desc {
@@ -133,18 +133,6 @@
     .lab-file__date {
       font-family: var(--font-terminal);
       font-size: var(--text-xs);
-      color: var(--text-dim);
-      letter-spacing: 0.05em;
-    }
-
-    /* Empty slot */
-    .lab-file--empty {
-      border-style: dashed;
-      opacity: 0.3;
-      pointer-events: none;
-    }
-
-    .lab-file--empty .lab-file__name {
       color: var(--text-dim);
     }
   </style>
@@ -179,8 +167,8 @@
       <div class="lab-header__badge">⬡ MODULE-03 // LAB</div>
       <h1 class="lab-header__title">Experiment Files</h1>
       <p class="lab-header__desc">
-        Active UI research. Unstable builds. Not everything here works the way it should.
-        That is the point. Add new experiments as you build them.
+        Active research. Unstable builds. Some of these do what they're supposed to.
+        Some don't. That's the point. Click anything to enter.
       </p>
     </header>
 
@@ -189,38 +177,68 @@
       <a href="experiment-01.html" class="lab-file">
         <div class="lab-file__num">EXP-001</div>
         <div class="lab-file__name">Particle Field</div>
-        <p class="lab-file__desc">
-          An interactive particle system. Mouse/touch moves the field.
-          Built entirely in Canvas — no libraries.
-        </p>
+        <div class="lab-file__type">Canvas — Interactive</div>
+        <p class="lab-file__desc">Crimson and silver particles respond to cursor movement. Connection lines form between nearby nodes. No libraries.</p>
         <div class="lab-file__footer">
-          <span class="lab-file__date">INITIAL BUILD</span>
+          <span class="lab-file__date">BUILD 1.0</span>
           <div class="k-status k-status--stable">Stable</div>
         </div>
       </a>
 
-      <!-- Add more experiments here as you build them -->
-      <!-- Copy the lab-file block above and update the content -->
-
-      <div class="lab-file lab-file--empty">
+      <a href="experiment-02.html" class="lab-file">
         <div class="lab-file__num">EXP-002</div>
-        <div class="lab-file__name">[ PENDING ]</div>
-        <p class="lab-file__desc">Experiment slot. Build something and fill this in.</p>
+        <div class="lab-file__name">Glitch Type</div>
+        <div class="lab-file__type">CSS — Visual</div>
+        <p class="lab-file__desc">Typography that doesn't want to stay still. Enter any text and watch it corrupt itself. Pure CSS animation, no JS rendering.</p>
         <div class="lab-file__footer">
-          <span class="lab-file__date">—</span>
-          <div class="k-status">Pending</div>
+          <span class="lab-file__date">BUILD 1.0</span>
+          <div class="k-status k-status--stable">Stable</div>
         </div>
-      </div>
+      </a>
 
-      <div class="lab-file lab-file--empty">
+      <a href="experiment-03.html" class="lab-file">
         <div class="lab-file__num">EXP-003</div>
-        <div class="lab-file__name">[ PENDING ]</div>
-        <p class="lab-file__desc">Experiment slot. Build something and fill this in.</p>
+        <div class="lab-file__name">Signal Noise</div>
+        <div class="lab-file__type">Canvas — Generative</div>
+        <p class="lab-file__desc">A self-evolving noise field. Perlin-style interference patterns that shift and breathe on their own. No interaction needed.</p>
         <div class="lab-file__footer">
-          <span class="lab-file__date">—</span>
-          <div class="k-status">Pending</div>
+          <span class="lab-file__date">BUILD 1.0</span>
+          <div class="k-status k-status--stable">Stable</div>
         </div>
-      </div>
+      </a>
+
+      <a href="experiment-04.html" class="lab-file">
+        <div class="lab-file__num">EXP-004</div>
+        <div class="lab-file__name">Brutalist Cards</div>
+        <div class="lab-file__type">UI Components — Interactive</div>
+        <p class="lab-file__desc">A set of UI components built outside the Kynar design system. Raw, heavy, opinionated. Hover everything.</p>
+        <div class="lab-file__footer">
+          <span class="lab-file__date">BUILD 1.0</span>
+          <div class="k-status k-status--stable">Stable</div>
+        </div>
+      </a>
+
+      <a href="experiment-05.html" class="lab-file">
+        <div class="lab-file__num">EXP-005</div>
+        <div class="lab-file__name">Geo Engine</div>
+        <div class="lab-file__type">Canvas — Generative</div>
+        <p class="lab-file__desc">Rotating geometric forms that evolve over time. Each reload produces a different configuration. Click to reset.</p>
+        <div class="lab-file__footer">
+          <span class="lab-file__date">BUILD 1.0</span>
+          <div class="k-status k-status--testing">Testing</div>
+        </div>
+      </a>
+
+      <a href="experiment-06.html" class="lab-file">
+        <div class="lab-file__num">EXP-006</div>
+        <div class="lab-file__name">Type Architect</div>
+        <div class="lab-file__type">Interactive Tool</div>
+        <p class="lab-file__desc">Build typographic layouts in real time. Choose weight, spacing, size. Export as CSS. Breaks the Kynar aesthetic entirely.</p>
+        <div class="lab-file__footer">
+          <span class="lab-file__date">BUILD 1.0</span>
+          <div class="k-status k-status--testing">Testing</div>
+        </div>
+      </a>
 
     </div>
   </main>
