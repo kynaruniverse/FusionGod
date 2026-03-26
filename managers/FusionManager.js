@@ -1,10 +1,14 @@
+/**
+ * FUSIONGOD - FusionManager (Phase 6 - fixed)
+ */
 import Card from '../entities/Card.js';
 import { FUSION_NAMES } from '../data/fusions.js';
+import ParticleSystem from '../systems/ParticleSystem.js';
 
 export default class FusionManager {
     constructor(scene) {
         this.scene = scene;
-        this.particles = new (await import('../systems/ParticleSystem.js')).default(scene);
+        this.particles = new ParticleSystem(scene);   // ← fixed
     }
 
     performFusion(cardA, cardB) {
@@ -48,7 +52,6 @@ export default class FusionManager {
                 this.unlockDiscovery(newName);
                 this.particles.burst(newCard.x, newCard.y, 0xffffff, 20);
 
-                // Auto-save after fusion
                 if (this.scene.saveSystem) this.scene.saveSystem.save();
             }
         });
