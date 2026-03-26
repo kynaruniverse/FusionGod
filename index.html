@@ -10,10 +10,11 @@
 </head>
 <body>
     <div id="game-container"></div>
-    <script src="database.js"></script>
-    <script src="ui.js"></script>
-    <script src="handManager.js"></script>
-    <script src="game.js"></script>
-</body>
 
+    <!-- Database stays global for now (simple constants) -->
+    <script src="database.js"></script>
+
+    <!-- Game is now a module (this fixes the import error) -->
+    <script type="module" src="game.js"></script>
+</body>
 </html>
