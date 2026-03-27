@@ -1,307 +1,130 @@
 /**
- * ALCHEMY CLASH: MODULAR MOBILE-FIRST STYLESHEET
- * Architecture: Flex-Box Orchestration
+ * ALCHEMY CLASH: GDD-ALIGNED STYLESHEET
+ * Earth-tone / pastel parchment alchemy theme. Soft, mystical, no neon/cyber.
  */
 
-/* ==========================================
-   1. VARIABLES & RESET
-   ========================================== */
 :root {
-    /* Brand Colors */
-    --cyan: #00ffff;
-    --magenta: #ff0055;
-    --gold: #ffcc00;
-    --bg-dark: #05050a;
-    
-    /* UI Values */
-    --panel-glass: rgba(0, 0, 0, 0.75);
-    --border-glow: rgba(0, 255, 255, 0.3);
-    --safe-top: env(safe-area-inset-top, 20px);
-    --safe-bottom: env(safe-area-inset-bottom, 20px);
-    
-    /* Animation Timings */
-    --transition-fast: 0.2s ease;
-    --transition-standard: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --parchment: #e8d9c0;
+    --earth-brown: #8c6f4e;
+    --pastel-blue: #5a9bb0;
+    --pastel-red: #c44a2f;
+    --pastel-lavender: #b8d4d8;
+    --text-dark: #3f2e1e;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-}
-
+* { margin:0; padding:0; box-sizing:border-box; }
 body, html {
-    width: 100%;
-    height: 100%;
-    background-color: var(--bg-dark);
-    color: #ffffff;
-    font-family: 'Orbitron', sans-serif;
-    overflow: hidden;
-    user-select: none;
+    width:100%; height:100%;
+    background:#e8d9c0;
+    color:var(--text-dark);
+    font-family:'Georgia', serif;
+    overflow:hidden;
+    user-select:none;
 }
 
-/* ==========================================
-   2. CORE SYSTEM CONTAINERS
-   ========================================== */
+#game-container { position:fixed; inset:0; z-index:1; }
+#ui-container { position:fixed; inset:0; z-index:1000; pointer-events:none; }
 
-/* The 3D World (Behind Everything) */
-#game-container {
-    position: fixed;
-    inset: 0;
-    z-index: 1;
-    opacity: 0;
-    pointer-events: none;
-}
-
-/* The UI Layer (Above Everything) */
-#ui-container {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    pointer-events: none;
-}
-
-/* Screen Wrapper */
 .game-screen {
-    position: absolute;
-    inset: 0;
-    display: none;
-    opacity: 0;
-    flex-direction: column;
-    padding: var(--safe-top) 20px var(--safe-bottom) 20px;
-    transition: opacity var(--transition-standard);
-    pointer-events: none;
+    position:absolute; inset:0;
+    display:none; opacity:0;
+    flex-direction:column;
+    padding:env(safe-area-inset-top,20px) 20px env(safe-area-inset-bottom,20px) 20px;
+    transition:opacity .4s cubic-bezier(0.4,0,0.2,1);
+    pointer-events:none;
+    background:linear-gradient(to bottom, #f5e9d0, #e8d9c0);
 }
 
-/* Active State */
-.game-screen.active-screen {
-    display: flex;
-    opacity: 1;
-    pointer-events: auto;
-}
+.game-screen.active-screen { display:flex; opacity:1; pointer-events:auto; }
 
-/* ==========================================
-   3. SHARED UI COMPONENTS
-   ========================================== */
-
+/* Parchment buttons */
 .aaa-button {
-    background: rgba(0, 255, 255, 0.1);
-    border: 2px solid var(--cyan);
-    color: var(--cyan);
-    font-family: 'Orbitron';
-    font-weight: 900;
-    letter-spacing: 2px;
-    cursor: pointer;
-    clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
-    transition: var(--transition-fast);
+    background:var(--parchment);
+    border:3px solid var(--earth-brown);
+    color:var(--text-dark);
+    font-family:'Georgia', serif;
+    font-weight:700;
+    letter-spacing:1px;
+    padding:14px 28px;
+    border-radius:8px;
+    cursor:pointer;
+    box-shadow:2px 4px 0 #3f2e1e;
+    transition:transform .2s;
 }
 
-.aaa-button:active {
-    transform: scale(0.95);
-    background: var(--cyan);
-    color: #000;
+.aaa-button:active { transform:translateY(2px); box-shadow:0 2px 0 #3f2e1e; }
+.aaa-button.parchment-btn { border-radius:12px; }
+
+.small { padding:8px 16px; font-size:0.9rem; }
+
+/* Hub / Workshop / Deck common */
+#hub-title, #workshop-title, #deck-title {
+    font-size:2.2rem; font-weight:900; color:var(--earth-brown);
+    text-align:center; margin-bottom:10px;
+    text-shadow:1px 2px 0 rgba(0,0,0,0.1);
 }
 
-.resource-pill {
-    background: var(--panel-glass);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 20px;
-    padding: 6px 14px;
-    font-size: 14px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+/* Element / Card grid */
+.element-item, .deck-card {
+    background:var(--parchment);
+    border:2px solid var(--earth-brown);
+    border-radius:12px;
+    padding:12px;
+    margin:8px;
+    text-align:center;
+    cursor:pointer;
+    transition:transform .2s, box-shadow .2s;
 }
 
-/* ==========================================
-   4. SPLASH SCREEN
-   ========================================== */
-#splash-screen {
-    justify-content: center;
-    align-items: center;
-    background: radial-gradient(circle at center, #1a1a2e 0%, var(--bg-dark) 100%);
+.element-item:hover, .deck-card:hover { transform:scale(1.05); }
+.deck-card.selected { border-color:#5a9bb0; box-shadow:0 0 15px rgba(90,155,176,.4); }
+
+/* Fusion slots */
+.fusion-slot {
+    background:var(--parchment);
+    border:3px dashed var(--earth-brown);
+    border-radius:12px;
+    padding:20px;
+    text-align:center;
+    min-height:80px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.1rem;
+    font-weight:700;
 }
 
-#splash-logo {
-    text-align: center;
-    margin-bottom: 10vh;
-    animation: logoFloat 3s ease-in-out infinite;
+/* Battle HUD */
+#battle-hud #lane-scores { display:flex; justify-content:space-around; padding:20px 10px; }
+.lane-score-container { text-align:center; }
+.enemy-lane-score, .player-lane-score {
+    width:68px; height:68px;
+    background:var(--parchment);
+    border:4px solid var(--earth-brown);
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.8rem; font-weight:900;
+    margin:0 6px;
+}
+.enemy-lane-score { border-color:var(--pastel-red); color:var(--pastel-red); }
+.player-lane-score { border-color:var(--pastel-blue); color:var(--pastel-blue); }
+
+.mana-vial {
+    background:var(--parchment);
+    border:3px solid var(--pastel-blue);
+    border-radius:50%;
+    width:80px; height:80px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-size:1.6rem; font-weight:900;
 }
 
-#splash-title {
-    font-size: clamp(40px, 10vw, 80px);
-    font-weight: 900;
-    background: linear-gradient(180deg, #fff 30%, var(--cyan) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    line-height: 0.9;
-    filter: drop-shadow(0 0 15px var(--border-glow));
+.parchment-announce {
+    background:var(--parchment);
+    border:3px solid var(--earth-brown);
+    padding:12px 30px;
+    font-size:1.3rem;
+    text-align:center;
+    border-radius:12px;
+    box-shadow:3px 6px 0 #3f2e1e;
 }
 
-/* ==========================================
-   5. MAIN MENU (REWRITTEN FOR FLEX)
-   ========================================== */
-#menu-screen {
-    background: linear-gradient(rgba(5,5,10,0.8), rgba(5,5,10,0.8)), 
-                url('https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=2070&auto=format&fit=crop') center/cover;
-}
-
-#menu-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 80px;
-    width: 100%;
-}
-
-#menu-player {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-#player-avatar {
-    width: 50px;
-    height: 50px;
-    border: 2px solid var(--magenta);
-    border-radius: 10px;
-    background: #222;
-    box-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
-}
-
-#menu-center {
-    flex: 1; /* Pushes top and bottom apart */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 0; /* Critical for flex stability */
-}
-
-#seasonal-mission-banner {
-    width: 100%;
-    max-width: 400px;
-    aspect-ratio: 16 / 9; /* Maintains shape across devices */
-    background: linear-gradient(135deg, #111 0%, #000 100%);
-    border: 2px solid var(--magenta);
-    border-radius: 15px;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-#menu-bottom {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 25px;
-    padding-bottom: 20px;
-}
-
-#play-btn-wrapper {
-    width: 100%;
-    max-width: 320px;
-    position: relative;
-}
-
-.play-button {
-    width: 100%;
-    padding: 20px;
-    font-size: 32px;
-    font-weight: 900;
-    font-style: italic;
-    color: #fff;
-    background: linear-gradient(to bottom, #0055ff, var(--cyan));
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0 6px 0 #003366, 0 15px 30px var(--border-glow);
-    cursor: pointer;
-    transition: transform 0.1s;
-}
-
-.play-button:active {
-    transform: translateY(4px);
-    box-shadow: 0 2px 0 #003366;
-}
-
-#current-deck-label {
-    position: absolute;
-    top: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--magenta);
-    padding: 4px 16px;
-    font-size: 11px;
-    font-weight: 900;
-    border-radius: 4px;
-    white-space: nowrap;
-    z-index: 5;
-}
-
-/* ==========================================
-   6. BATTLE HUD
-   ========================================== */
-#score-container {
-    display: flex;
-    justify-content: space-around;
-    padding-top: 20px;
-}
-
-.lane-score, .enemy-score {
-    width: 65px;
-    height: 65px;
-    background: var(--panel-glass);
-    border: 3px solid var(--cyan);
-    border-radius: 50%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    font-weight: 900;
-    transition: var(--transition-standard);
-}
-
-.enemy-score { border-color: var(--magenta); color: var(--magenta); }
-
-.winning {
-    transform: scale(1.15);
-    box-shadow: 0 0 20px currentColor;
-    background: rgba(255,255,255,0.1);
-}
-
-#bottom-bar {
-    margin-top: auto; /* Sticks to bottom of flex screen */
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 10px;
-}
-
-.mana-hex {
-    width: 75px;
-    height: 75px;
-    background: rgba(0, 255, 255, 0.1);
-    border: 3px solid var(--cyan);
-    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 30px;
-    font-weight: 900;
-    color: var(--cyan);
-}
-
-/* ==========================================
-   7. ANIMATIONS
-   ========================================== */
-@keyframes logoFloat {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-15px); }
-}
-
-/* Utility to hide elements cleanly */
-.hidden { display: none !important; }
+/* Utility */
+.hidden { display:none !important; }
