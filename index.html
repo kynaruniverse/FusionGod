@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#05050a">
+    <meta name="theme-color" content="#e8d9c0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="description" content="Alchemy Clash: AAA 3D Card Battle Game. Assemble decks, deploy cards, and dominate lanes in cinematic battles.">
+    <meta name="description" content="Alchemy Clash – Fuse elements, craft cards, and battle in parchment lanes.">
 
-    <title>Alchemy Clash | AAA 3D Card Battle</title>
+    <title>Alchemy Clash</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="favicon.png">
 
-    <!-- Fonts -->
+    <!-- Fonts: Earthy / Mystical Serif -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Georgia:wght@400;700&family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
 
     <!-- Main Styles -->
     <link rel="stylesheet" href="style.css">
@@ -29,16 +29,15 @@
     <script type="importmap">
     {
         "imports": {
-            "three": "https://unpkg.com/three@0.150.1/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.150.1/examples/jsm/"
+            "three": "https://unpkg.com/three@0.150.1/build/three.module.js"
         }
     }
     </script>
 </head>
 <body>
 
-    <!-- Preloader -->
-    <div id="preloader" style="position:fixed;inset:0;background:#05050a;display:flex;align-items:center;justify-content:center;color:#00ffff;font-family:'Orbitron', monospace;font-size:24px;z-index:9999;">
+    <!-- Preloader – Parchment Theme -->
+    <div id="preloader" style="position:fixed;inset:0;background:#e8d9c0;display:flex;align-items:center;justify-content:center;color:#3f2e1e;font-family:'Cinzel', serif;font-size:28px;z-index:9999;letter-spacing:2px;">
         Loading Alchemy Clash...
     </div>
 
@@ -52,10 +51,14 @@
     <script type="module" defer src="main.js"></script>
 
     <script>
-        // Simple preloader removal
+        // Remove preloader once loaded
         window.addEventListener('load', () => {
             const preloader = document.getElementById('preloader');
-            if(preloader) preloader.style.display = 'none';
+            if (preloader) {
+                preloader.style.transition = 'opacity 0.8s';
+                preloader.style.opacity = '0';
+                setTimeout(() => preloader.remove(), 800);
+            }
         });
     </script>
 </body>

@@ -1,7 +1,7 @@
 /**
- * ALCHEMY CLASH: STATE ORCHESTRATOR (FINAL GDD-ALIGNED)
- * Full flow: Splash → Hub → Workshop → Deck Builder → Battle
- * Wires Engine3D + DuelManager + AI + Input + HUD.
+ * ALCHEMY CLASH: FINAL STATE ORCHESTRATOR (COMPLETE GDD-ALIGNED)
+ * Full flow: Tutorial Splash → Hub (Workshop / Deck / Collections / Quests) → Battle
+ * All systems wired: ElementSystem, Fusion, CardFactory, DuelManager, AI, Input, HUD, Rewards.
  */
 
 import { Engine3D } from './src/core/Engine3D.js';
@@ -16,6 +16,7 @@ import { HubScreen } from './src/ui/HubScreen.js';
 import { WorkshopScreen } from './src/ui/WorkshopScreen.js';
 import { DeckBuilder } from './src/ui/DeckBuilder.js';
 import { BattleHUD } from './src/ui/BattleHUD.js';
+import { QuestsScreen } from './src/ui/QuestsScreen.js';
 
 class GameBootstrapper {
     constructor() {
@@ -23,19 +24,19 @@ class GameBootstrapper {
         this.uiHub = document.getElementById('ui-container');
         this.battleContainer = document.getElementById('game-container');
         this.elementSystem = new ElementSystem();
-        this.initSplashScreen();
+        this.initTutorialSplash();
     }
 
-    initSplashScreen() {
+    initTutorialSplash() {
         this.uiHub.innerHTML = `
             <div id="splash-screen" class="game-screen active-screen">
                 <div id="splash-logo">
                     <div id="splash-title">ALCHEMY<br>CLASH</div>
-                    <div id="splash-subtext">MASTER THE ELEMENTS</div>
+                    <div id="splash-subtext">Tutorial: Fuse your first elements</div>
                 </div>
-                <button id="enter-arena-btn" class="aaa-button">ENTER THE WORKSHOP</button>
+                <button id="start-tutorial-btn" class="aaa-button">BEGIN TUTORIAL</button>
             </div>`;
-        document.getElementById('enter-arena-btn').onclick = () => {
+        document.getElementById('start-tutorial-btn').onclick = () => {
             this.audio.play('CLICK', 0.5);
             this.transitionTo(() => this.initHubScreen());
         };
@@ -77,17 +78,21 @@ class GameBootstrapper {
         this.hud = new BattleHUD(this.uiHub, this.duel);
         this.duel.ui = this.hud;
 
-        this.duel.spawnPlayerDeck(playerDeck || ['FIRE_BOLT','WATER_FLOW','EARTH_WARD','AIR_GUST']);
+        this.duel.spawnPlayerDeck(playerDeck || ['FIRE_BOLT', 'WATER_FLOW', 'EARTH_WARD', 'AIR_GUST']);
 
         this.audio.play('PLACE', 0.4);
     }
 
     transitionTo(nextState) {
-        gsap.to(this.uiHub, { opacity: 0, duration: 0.4, onComplete: () => {
-            this.uiHub.innerHTML = '';
-            this.uiHub.style.opacity = 1;
-            nextState();
-        }});
+        gsap.to(this.uiHub, { 
+            opacity: 0, 
+            duration: 0.4, 
+            onComplete: () => {
+                this.uiHub.innerHTML = '';
+                this.uiHub.style.opacity = 1;
+                nextState();
+            }
+        });
     }
 }
 
