@@ -67,26 +67,34 @@ class GameBootstrapper {
      * Transition from Menu to the Deck Selection Screen
      */
     openDeckBuilder() {
-        // 1. Visual Feedback
+        console.log("Button Clicked: Opening Deck Builder...");
+        
         const menu = document.getElementById('menu-layer');
         const uiLayer = document.getElementById('ui-layer');
         
-        // Ensure UI layer is ready to receive the deck builder
+        // Force the UI layer to be visible and at the front
         uiLayer.style.display = 'block'; 
+        uiLayer.style.opacity = '1';
+        uiLayer.style.zIndex = '9999';
 
-        gsap.to(menu, { opacity: 0, duration: 0.5, onComplete: () => {
-            menu.style.display = 'none';
-            
-            // 2. Launch Deck Builder
-            try {
-                new DeckBuilder((selectedDeck) => {
-                    this.startBattle(selectedDeck);
-                });
-            } catch (e) {
-                console.error("DeckBuilder failed to initialize:", e);
-            }
-        }});
+        if (menu) {
+            gsap.to(menu, { opacity: 0, duration: 0.4, onComplete: () => {
+                menu.style.display = 'none';
+                console.log("Menu hidden, creating DeckBuilder...");
+                
+                try {
+                    new DeckBuilder((selectedDeck) => {
+                        console.log("Deck locked:", selectedDeck);
+                        this.startBattle(selectedDeck);
+                    });
+                } catch (e) {
+                    console.error("DECKBUILDER ERROR:", e);
+                    alert("DeckBuilder Error: " + e.message);
+                }
+            }});
+        }
     }
+
 
 
 

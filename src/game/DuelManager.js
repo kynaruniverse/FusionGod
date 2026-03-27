@@ -39,11 +39,14 @@ export class DuelManager {
         
         for (let i = 0; i < 3; i++) {
             const laneMat = new THREE.MeshStandardMaterial({ 
-                color: 0x00ffff, 
+                color: 0x444444, // Neutral grey start
                 transparent: true, 
-                opacity: 0.05,
-                side: THREE.DoubleSide
+                opacity: 0.1,
+                side: THREE.DoubleSide,
+                emissive: 0x000000,
+                emissiveIntensity: 0.5
             });
+
             
             const lane = new THREE.Mesh(laneGeo, laneMat);
             // Positioned for the Tactical View (z=-0.1 to stay behind cards)
@@ -122,8 +125,9 @@ export class DuelManager {
         if (this.isRevealing) return;
         this.isRevealing = true;
 
-        // 1. AI Logic: Rival makes its move
-        const enemyCard = this.ai.playTurn();
+        // 1. AI Logic: Wait for the Rival to finish "Thinking"
+        const enemyCard = await this.ai.playTurn(); 
+        
         if (enemyCard) {
             const eLane = enemyCard.userData.targetLane;
             const eOffset = 1.2 - (eLane.userData.eCards * 0.4);
@@ -194,6 +198,7 @@ export class DuelManager {
                         this.abilities.trigger(card);
                     }
                     
+                    this.updateLaneVisuals(); // AAA: Update lane color based on power
                     this.ui.updateUI();
 
                     card.userData.revealed = true;
@@ -205,19 +210,49 @@ export class DuelManager {
         });
     }
 
+    /**
+     * Final scoring and cinematic victory sequence
+     */
     endGame() {
         let pWins = 0;
         let eWins = 0;
         
         this.lanes.forEach(l => {
-            if (l.userData.pPower > l.userData.ePower) pWins++;
-            else if (l.userData.ePower > l.userData.pPower) eWins++;
+            if (l.userData.pPower > l.userData.ePower) {
+                pWins++;
+                if (this.vfx) this.vfx.createExplosion(l.position, 0x00ffff);
+            } else if (l.userData.ePower > l.userData.pPower) {
+                eWins++;
+                if (this.vfx) this.vfx.createExplosion(l.position, 0xff0055);
+            }
         });
 
         const result = pWins > eWins ? "VICTORY" : (pWins === eWins ? "DRAW" : "DEFEAT");
         this.ui.announce(result);
         
-        // Final UI Polish: Hide the End Turn button
-        document.getElementById('end-turn-btn').style.display = 'none';
+        const btn = document.getElementById('end-turn-btn');
+        if (btn) gsap.to(btn, { opacity: 0, duration: 0.5, onComplete: () => btn.style.display = 'none' });
+    }
+
+    /**
+     * Updates lane colors to reflect who is winning
+     */
+    updateLaneVisuals() {
+        this.lanes.forEach(lane => {
+            const p = lane.userData.pPower;
+            const e = lane.userData.ePower;
+            
+            let targetColor = 0x444444; // Tie
+            if (p > e) targetColor = 0x00ffff; // Player
+            if (e > p) targetColor = 0xff0055; // Enemy
+
+            gsap.to(lane.material.color, {
+                r: ((targetColor >> 16) & 255) / 255,
+                g: ((targetColor >> 8) & 255) / 255,
+                b: (targetColor & 255) / 255,
+                duration: 0.5
+            });
+        });
     }
 }
+

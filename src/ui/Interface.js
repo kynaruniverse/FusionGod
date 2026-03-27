@@ -57,15 +57,16 @@ export class Interface {
      * Syncs the 3D Lane data and Player Mana with the HTML HUD
      */
     updateUI() {
-        // 1. Update Mana/Energy Hex
+        // 1. Update Mana & Round Tracker
         const manaVal = document.getElementById('mana-value');
-        if (manaVal) {
-            manaVal.innerText = this.duel.playerMana;
-            
-            // Visual feedback: If out of mana, dim the hex slightly
-            const hex = document.querySelector('.mana-hex');
-            if (hex) hex.style.opacity = this.duel.playerMana === 0 ? "0.5" : "1";
-        }
+        const roundVal = document.getElementById('current-round');
+
+        if (manaVal) manaVal.innerText = this.duel.playerMana;
+        if (roundVal) roundVal.innerText = this.duel.currentTurn;
+
+        const hex = document.querySelector('.mana-hex');
+        if (hex) hex.style.opacity = this.duel.playerMana === 0 ? "0.5" : "1";
+
 
         // 2. Update Lane Scores (Player and Enemy)
         this.duel.lanes.forEach((lane, i) => {
@@ -73,26 +74,34 @@ export class Interface {
             const eScoreEl = document.getElementById(`enemy-${i}`);
 
             if (pScoreEl && eScoreEl) {
-                // If power changed, add a little "pulse" animation
-                if (pScoreEl.innerText != lane.userData.pPower) {
-                    this.pulseElement(pScoreEl);
-                }
-                if (eScoreEl.innerText != lane.userData.ePower) {
-                    this.pulseElement(eScoreEl);
-                }
+                const newPPower = lane.userData.pPower;
+                const newEPower = lane.userData.ePower;
 
-                pScoreEl.innerText = lane.userData.pPower;
-                eScoreEl.innerText = lane.userData.ePower;
+                // Pulse only if power increases
+                if (parseInt(pScoreEl.innerText) < newPPower) this.pulseElement(pScoreEl);
+                if (parseInt(eScoreEl.innerText) < newEPower) this.pulseElement(eScoreEl);
+
+                pScoreEl.innerText = newPPower;
+                eScoreEl.innerText = newEPower;
+
+                // High-power glow for scores 10 or higher
+                pScoreEl.classList.toggle('high-power', newPPower >= 10);
+                eScoreEl.classList.toggle('high-power', newEPower >= 10);
             }
         });
 
-        // 3. Control End Turn Button state
+
+        // 3. Control End Turn Button & Theme state
+        const bottomBar = document.getElementById('bottom-bar');
+
         if (this.endTurnBtn) {
             if (this.duel.isRevealing) {
+                if (bottomBar) bottomBar.classList.add('ai-turn');
                 this.endTurnBtn.style.opacity = "0.5";
                 this.endTurnBtn.style.pointerEvents = "none";
-                this.endTurnBtn.innerText = "WAITING...";
+                this.endTurnBtn.innerText = "RIVAL MOVE...";
             } else {
+                if (bottomBar) bottomBar.classList.remove('ai-turn');
                 this.endTurnBtn.style.opacity = "1";
                 this.endTurnBtn.style.pointerEvents = "auto";
                 this.endTurnBtn.innerText = "END TURN";

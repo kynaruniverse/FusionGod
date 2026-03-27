@@ -22,5 +22,17 @@ export const CARD_DATABASE = {
         ability: { type: 'BOOST_LANE', value: 3 },
         texture: 'https://placehold.co/600x900/333333/ffffff?text=REAPER',
         desc: 'ON REVEAL: +3 Power to this lane.'
+    },
+    'SHADOW_ASSASSIN': { 
+        name: 'Shadow Assassin', atk: 1, cost: 2, element: 'WIND', color: 0xaa00ff,
+        ability: { type: 'SPY' },
+        texture: 'https://placehold.co/600x900/110022/aa00ff?text=SPY',
+        desc: 'ON REVEAL: Move to the enemy side of this lane.'
+    },
+    'EMERALD_TITAN': { 
+        name: 'Emerald Titan', atk: 4, cost: 3, element: 'EARTH', color: 0x00ff88,
+        ability: { type: 'SURGE', value: 4 },
+        texture: 'https://placehold.co/600x900/002211/00ff88?text=TITAN',
+        desc: 'SURGE: +4 Power if you are winning this lane.'
     }
 };

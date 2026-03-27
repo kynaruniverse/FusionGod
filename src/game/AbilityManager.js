@@ -28,25 +28,92 @@ export class AbilityManager {
             case 'SURGE':
                 this.surge(card, ability.value);
                 break;
+            case 'SPY':
+                this.spy(card);
+                break;
         }
     }
+
 
     // Effect: Adds power to all OTHER cards in this lane
     boostLane(card, value) {
         const lane = card.userData.targetLane;
-        // In a real game, you'd iterate through cards in the lane and add VFX
         if (card.userData.owner === 'PLAYER') lane.userData.pPower += value;
         else lane.userData.ePower += value;
         
-        this.duel.vfx.createImpact(card.position, 0xffff00); // Golden buff glow
+        // AAA: Visual feedback for the boost
+        if (this.duel.vfx) this.duel.vfx.createImpact(card.position, 0xffff00);
+        gsap.to(lane.scale, { x: 1.1, z: 1.1, duration: 0.2, yoyo: true, repeat: 1 });
     }
+
 
     // Effect: Reduces the enemy's power in this lane
     burnEnemy(card, value) {
         const lane = card.userData.targetLane;
-        if (card.userData.owner === 'PLAYER') lane.userData.ePower -= value;
-        else lane.userData.pPower -= value;
+        if (card.userData.owner === 'PLAYER') {
+            lane.userData.ePower = Math.max(0, lane.userData.ePower - value);
+        } else {
+            lane.userData.pPower = Math.max(0, lane.userData.pPower - value);
+        }
         
-        this.duel.vfx.createImpact(lane.position, 0xff4400); // Fire impact
+        if (this.duel.vfx) this.duel.vfx.createImpact(lane.position, 0xff4400);
+    }
+
+    // Effect: Surge - Gains extra power if you are already winning this lane
+    surge(card, value) {
+        const lane = card.userData.targetLane;
+        const isWinning = card.userData.owner === 'PLAYER' ? 
+            (lane.userData.pPower > lane.userData.ePower) : 
+            (lane.userData.ePower > lane.userData.pPower);
+
+        if (isWinning) {
+            if (card.userData.owner === 'PLAYER') lane.userData.pPower += value;
+            else lane.userData.ePower += value;
+            
+            if (this.duel.vfx) this.duel.vfx.createImpact(card.position, 0x00ff00);
+            console.log("SURGE ACTIVATED!");
+        }
+    }
+    
+    // Effect: Moves to the OPPONENT'S side of the lane and gives them the power
+    // (Usually a low-power card that triggers a secondary negative effect)
+    spy(card) {
+        const lane = card.userData.targetLane;
+        const power = card.userData.data.atk;
+
+        // 1. Subtract power from current owner
+        if (card.userData.owner === 'PLAYER') {
+            lane.userData.pPower -= power;
+            card.userData.owner = 'ENEMY';
+            lane.userData.eCards++;
+        } else {
+            lane.userData.ePower -= power;
+            card.userData.owner = 'PLAYER';
+            lane.userData.pCards++;
+        }
+
+        // 2. Add power to new owner
+        if (card.userData.owner === 'PLAYER') lane.userData.pPower += power;
+        else lane.userData.ePower += power;
+
+        // 3. AAA Animation: Slide the card across the board "equator"
+        const newZ = card.userData.owner === 'ENEMY' ? 0.1 : 0.1; // Maintain depth
+        const yOffset = card.userData.owner === 'ENEMY' ? 
+            (1.2 - (lane.userData.eCards * 0.4)) : 
+            (-1.2 + (lane.userData.pCards * 0.4));
+
+        gsap.to(card.position, {
+            y: lane.position.y + yOffset,
+            duration: 0.8,
+            ease: "expo.inOut",
+            onStart: () => {
+                if (this.duel.audio) this.duel.audio.play('SLIDE', 0.5);
+            },
+            onComplete: () => {
+                if (this.duel.vfx) this.duel.vfx.createImpact(card.position, 0xff00ff);
+                this.duel.updateLaneVisuals();
+                this.duel.ui.updateUI();
+            }
+        });
     }
 }

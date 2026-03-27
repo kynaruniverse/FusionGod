@@ -9,20 +9,30 @@ export class AIManager {
     constructor(duel, factory) {
         this.duel = duel;
         this.factory = factory;
+        this.isThinking = false;
         
-        // Initial Enemy Deck (Matches the 6-round Alpha structure)
+        // High-Tier Rival Deck (Mixed Elements)
         this.deck = [
-            'FIRE_DRAGON', 'WATER_SPIRIT', 'FIRE_DRAGON', 
-            'WATER_SPIRIT', 'FIRE_DRAGON', 'WATER_SPIRIT'
+            'FIRE_DRAGON', 'WATER_SPIRIT', 'EARTH_GOLEM', 
+            'WIND_REAPER', 'FIRE_DRAGON', 'WATER_SPIRIT'
         ];
     }
+
 
     /**
      * Decides which card to play and where. 
      * Called by DuelManager during the processTurn sequence.
      */
-    playTurn() {
+    async playTurn() {
+        if (this.isThinking) return null;
+        this.isThinking = true;
+
+        // 1. "Human-Like" Thinking Delay (1.2 to 2 seconds)
+        const delay = 1200 + Math.random() * 800;
+        await new Promise(resolve => setTimeout(resolve, delay));
+
         const turnEnergy = this.duel.currentTurn;
+
         
         // 1. Filter deck for cards the AI can actually afford
         const affordableIndices = this.deck.reduce((acc, key, idx) => {
@@ -52,15 +62,23 @@ export class AIManager {
         // The AI "slams" the card into the enemy side of the lane (y offset +1.2)
         const yOffset = 1.2 - (targetLane.userData.eCards * 0.4);
         
+        // 5. Cinematic "Slam" Animation
         gsap.to(card.position, { 
             y: targetLane.position.y + yOffset, 
             z: 0.1, 
-            duration: 0.8, 
-            ease: "expo.out" 
+            duration: 0.6, 
+            ease: "bounce.out",
+            onComplete: () => {
+                // Trigger a small dust cloud or impact when AI plays
+                if (this.duel.vfx) this.duel.vfx.createImpact(card.position, 0x444444);
+                if (this.duel.audio) this.duel.audio.play('SNAP', 0.4);
+                this.isThinking = false;
+            }
         });
 
         return card;
     }
+
 
     /**
      * Simple tactical logic: Try to bolster lanes that are close or being lost.
