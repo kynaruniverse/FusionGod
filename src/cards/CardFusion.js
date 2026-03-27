@@ -16,7 +16,6 @@ export class CardFusion {
     }
 
     canFuse(cardKeyA, cardKeyB) {
-        // Simple rule: same element + same rarity = upgrade
         const a = CARD_DATABASE[cardKeyA];
         const b = CARD_DATABASE[cardKeyB];
         return a && b && a.element === b.element && a.rarity === b.rarity;
@@ -26,12 +25,10 @@ export class CardFusion {
         if (!this.canFuse(cardKeyA, cardKeyB)) return null;
 
         const base = CARD_DATABASE[cardKeyA];
-        // Upgrade example: +1 power, bump rarity
         const newPower = base.power + 1;
         const newRarity = base.rarity === 'COMMON' ? 'RARE' : 
                          base.rarity === 'RARE' ? 'EPIC' : 'LEGENDARY';
 
-        // For v1 we return an upgraded version (in future: new card key)
         return {
             ...base,
             power: newPower,

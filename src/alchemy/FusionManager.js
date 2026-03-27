@@ -1,14 +1,16 @@
 /**
- * ALCHEMY CLASH: FUSION MANAGER (GDD-ALIGNED)
+ * ALCHEMY CLASH: FUSION MANAGER (COMPLETE GDD-ALIGNED)
  * Handles element combination, discovery, and card unlock rewards.
  * Gentle pastel / earth-tone alchemy only. No neon.
  */
 
 import { ELEMENT_DATABASE, FUSION_RULES, STARTING_ELEMENTS } from './ElementData.js';
+import { CARD_DATABASE } from '../cards/CardData.js';
 
 export class FusionManager {
     constructor() {
         this.unlockedElements = new Set(STARTING_ELEMENTS);
+        this.unlockedCards = new Set(['FIRE_BOLT','WATER_FLOW','EARTH_WARD','AIR_GUST']);
         this.fusionHistory = [];
     }
 
@@ -22,6 +24,11 @@ export class FusionManager {
         if (resultKey && !this.unlockedElements.has(resultKey)) {
             this.unlockedElements.add(resultKey);
             this.fusionHistory.push({ a: elementA, b: elementB, result: resultKey });
+
+            const cardKey = ELEMENT_DATABASE[resultKey].unlocksCard;
+            if (cardKey && CARD_DATABASE[cardKey]) {
+                this.unlockedCards.add(cardKey);
+            }
             return resultKey;
         }
         return null; // fusion failed or already known
@@ -31,11 +38,7 @@ export class FusionManager {
         return Array.from(this.unlockedElements).map(key => ELEMENT_DATABASE[key]);
     }
 
-    /**
-     * Placeholder for future card unlock on successful fusion
-     */
-    getFusionReward(fusionResult) {
-        // Will connect to CardData later
-        return null;
+    getUnlockedCards() {
+        return Array.from(this.unlockedCards).map(key => CARD_DATABASE[key]);
     }
 }

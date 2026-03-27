@@ -76,10 +76,14 @@ export class CardFactory {
         this.scene.add(mesh);
         return mesh;
     }
-    
+
+    /**
+     * Spawns a deck visually (GDD-aligned - soft animation)
+     */
     spawnDeck(deckList = [], owner = 'PLAYER', onComplete = null) {
-    if (!deckList.length) return [];
-    const cards = [];
+        if (!deckList.length) return [];
+
+        const cards = [];
         const startX = owner === 'PLAYER' ? -5 : 5;
         const startY = owner === 'PLAYER' ? -7 : 7;
 

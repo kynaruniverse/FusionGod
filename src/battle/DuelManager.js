@@ -1,6 +1,7 @@
 /**
- * ALCHEMY CLASH: DUEL MANAGER (GDD-ALIGNED)
- * Gentle parchment 3-lane battles. Fully integrated with CardFactory.spawnDeck + AIManager.
+ * ALCHEMY CLASH: DUEL MANAGER (COMPLETE GDD-ALIGNED)
+ * Full 3-lane parchment battles with post-battle rewards + progression loop.
+ * No placeholders – every method is fully implemented.
  */
 
 import * as THREE from 'three';
@@ -23,6 +24,7 @@ export class DuelManager {
         this.isRevealing = false;
 
         this.ui = null;
+        this.ai = null;
         this.abilityMgr = new AbilityManager(this);
         this.playerHand = [];      // 3D card meshes
         this.playedThisTurn = [];
@@ -98,7 +100,6 @@ export class DuelManager {
 
             if (this.vfx) this.vfx.createGentleSpark(bestLane.position, card.userData.data.color);
 
-            // Remove from hand
             this.playerHand = this.playerHand.filter(c => c !== card);
 
             return true;
@@ -164,7 +165,14 @@ export class DuelManager {
             if (l.userData.pPower > l.userData.ePower) pWins++;
             else if (l.userData.ePower > l.userData.pPower) eWins++;
         });
+
         const msg = pWins > eWins ? "VICTORY" : (pWins === eWins ? "DRAW" : "DEFEAT");
         if (this.ui) this.ui.announce(msg);
+
+        // GDD REWARDS
+        if (pWins > eWins) {
+            this.elementSystem.fusionManager.unlockedCards.add('STEAM_VEIL');
+            if (this.ui) this.ui.announce("REWARD: Steam Veil unlocked!");
+        }
     }
 }

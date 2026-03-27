@@ -1,7 +1,6 @@
 /**
- * ALCHEMY CLASH: WORKSHOP SCREEN (GDD-ALIGNED)
- * Fusion interface with drag-to-combine elements. Pastel parchment UI.
- * Uses ElementSystem for real-time discovery.
+ * ALCHEMY CLASH: WORKSHOP SCREEN (COMPLETE GDD-ALIGNED)
+ * Full fusion UI + card reward display.
  */
 
 import { ELEMENT_DATABASE } from '../alchemy/ElementData.js';
@@ -12,7 +11,6 @@ export class WorkshopScreen {
         this.parent = parent;
         this.elementSystem = elementSystem;
         this.onComplete = null;
-        this.selected = [];
         this.init();
     }
 
@@ -23,44 +21,31 @@ export class WorkshopScreen {
                     <div id="workshop-title">FUSION WORKSHOP</div>
                     <button id="back-to-hub-btn" class="aaa-button small">← BACK</button>
                 </div>
-                
-                <div id="book-of-elements">
-                    <h3>UNLOCKED ELEMENTS</h3>
-                    <div id="element-grid"></div>
-                </div>
-                
+                <div id="book-of-elements"><h3>UNLOCKED ELEMENTS</h3><div id="element-grid"></div></div>
                 <div id="fusion-area">
                     <div id="fusion-slot-a" class="fusion-slot">DROP FIRST</div>
                     <div id="fusion-plus">+</div>
                     <div id="fusion-slot-b" class="fusion-slot">DROP SECOND</div>
                     <button id="fuse-btn" class="aaa-button" disabled>FUSE</button>
                 </div>
-                
                 <div id="fusion-result"></div>
             </div>`;
 
         this.renderElementGrid();
         this.setupDragAndDrop();
-        
-        document.getElementById('back-to-hub-btn').onclick = () => {
-            if (this.onComplete) this.onComplete();
-        };
+
+        document.getElementById('back-to-hub-btn').onclick = () => this.onComplete?.();
     }
 
     renderElementGrid() {
         const grid = document.getElementById('element-grid');
         grid.innerHTML = '';
-        
         this.elementSystem.getUnlocked().forEach(el => {
             const item = document.createElement('div');
             item.className = 'element-item';
-            item.innerHTML = `
-                <span class="elem-icon">${el.icon}</span>
-                <span class="elem-name">${el.name}</span>
-            `;
+            item.innerHTML = `<span class="elem-icon">\( {el.icon}</span><span class="elem-name"> \){el.name}</span>`;
             item.draggable = true;
             item.dataset.key = Object.keys(ELEMENT_DATABASE).find(k => ELEMENT_DATABASE[k] === el);
-            
             item.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', item.dataset.key));
             grid.appendChild(item);
         });
@@ -88,26 +73,26 @@ export class WorkshopScreen {
     checkCanFuse() {
         const a = document.getElementById('fusion-slot-a').dataset.key;
         const b = document.getElementById('fusion-slot-b').dataset.key;
-        const btn = document.getElementById('fuse-btn');
-        btn.disabled = !(a && b && a !== b);
+        document.getElementById('fuse-btn').disabled = !(a && b && a !== b);
     }
 
     performFusion() {
         const a = document.getElementById('fusion-slot-a').dataset.key;
         const b = document.getElementById('fusion-slot-b').dataset.key;
-        
         const result = this.elementSystem.fuse(a, b);
-        
+
         const resultEl = document.getElementById('fusion-result');
         if (result) {
-            resultEl.innerHTML = `<span class="success">✨ NEW ELEMENT UNLOCKED: ${result}</span>`;
-            gsap.fromTo(resultEl, { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6 });
-            this.renderElementGrid(); // refresh grid
+            resultEl.innerHTML = `<span class="success">✨ ${result} UNLOCKED!</span>`;
+            if (this.elementSystem.fusionManager.getUnlockedCards().length > 0) {
+                resultEl.innerHTML += `<br><small>New card available in deck builder</small>`;
+            }
+            gsap.fromTo(resultEl, {scale:0.6, opacity:0}, {scale:1, opacity:1, duration:0.6});
+            this.renderElementGrid();
         } else {
-            resultEl.innerHTML = `<span class="fail">No new fusion discovered</span>`;
+            resultEl.innerHTML = `<span class="fail">No new fusion</span>`;
         }
-        
-        // Reset slots
+
         document.getElementById('fusion-slot-a').textContent = 'DROP FIRST';
         document.getElementById('fusion-slot-b').textContent = 'DROP SECOND';
         document.getElementById('fuse-btn').disabled = true;
