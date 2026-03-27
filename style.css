@@ -1,54 +1,123 @@
 /**
- * ALCHEMY CLASH: AAA STATE-BASED STYLESHEET
- * Inspired by Marvel Snap Visual Identity
+ * ALCHEMY CLASH: MODULAR MOBILE-FIRST STYLESHEET
+ * Architecture: Flex-Box Orchestration
  */
 
-/* 1. GLOBAL BASE */
+/* ==========================================
+   1. VARIABLES & RESET
+   ========================================== */
 :root {
+    /* Brand Colors */
     --cyan: #00ffff;
     --magenta: #ff0055;
     --gold: #ffcc00;
     --bg-dark: #05050a;
+    
+    /* UI Values */
     --panel-glass: rgba(0, 0, 0, 0.75);
+    --border-glow: rgba(0, 255, 255, 0.3);
+    --safe-top: env(safe-area-inset-top, 20px);
+    --safe-bottom: env(safe-area-inset-bottom, 20px);
+    
+    /* Animation Timings */
+    --transition-fast: 0.2s ease;
+    --transition-standard: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-body, html {
-    margin: 0; padding: 0; width: 100%; height: 100%;
-    background-color: var(--bg-dark);
-    overflow: hidden;
-    color: #ffffff;
-    font-family: 'Orbitron', sans-serif;
-    user-select: none;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
 }
 
-/* 2. THE UI ORCHESTRATOR */
+body, html {
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-dark);
+    color: #ffffff;
+    font-family: 'Orbitron', sans-serif;
+    overflow: hidden;
+    user-select: none;
+}
+
+/* ==========================================
+   2. CORE SYSTEM CONTAINERS
+   ========================================== */
+
+/* The 3D World (Behind Everything) */
+#game-container {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* The UI Layer (Above Everything) */
 #ui-container {
     position: fixed;
-    top: 0; left: 0; width: 100vw; height: 100vh;
+    inset: 0;
     z-index: 1000;
     pointer-events: none;
 }
 
+/* Screen Wrapper */
 .game-screen {
     position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    display: none; 
+    inset: 0;
+    display: none;
     opacity: 0;
+    flex-direction: column;
+    padding: var(--safe-top) 20px var(--safe-bottom) 20px;
+    transition: opacity var(--transition-standard);
     pointer-events: none;
-    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    background-size: cover;
-    background-position: center;
 }
 
+/* Active State */
 .game-screen.active-screen {
     display: flex;
-    flex-direction: column;
     opacity: 1;
     pointer-events: auto;
 }
 
-/* 3. SCREEN 1: AAA SPLASH */
+/* ==========================================
+   3. SHARED UI COMPONENTS
+   ========================================== */
+
+.aaa-button {
+    background: rgba(0, 255, 255, 0.1);
+    border: 2px solid var(--cyan);
+    color: var(--cyan);
+    font-family: 'Orbitron';
+    font-weight: 900;
+    letter-spacing: 2px;
+    cursor: pointer;
+    clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+    transition: var(--transition-fast);
+}
+
+.aaa-button:active {
+    transform: scale(0.95);
+    background: var(--cyan);
+    color: #000;
+}
+
+.resource-pill {
+    background: var(--panel-glass);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ==========================================
+   4. SPLASH SCREEN
+   ========================================== */
 #splash-screen {
     justify-content: center;
     align-items: center;
@@ -57,169 +126,182 @@ body, html {
 
 #splash-logo {
     text-align: center;
-    margin-bottom: 60px;
+    margin-bottom: 10vh;
     animation: logoFloat 3s ease-in-out infinite;
 }
 
-#splash-title { 
-    font-size: clamp(48px, 12vw, 82px); 
-    font-weight: 900; 
-    background: linear-gradient(180deg, #fff 30%, var(--cyan) 100%); 
-    -webkit-background-clip: text; 
-    -webkit-text-fill-color: transparent; 
-    letter-spacing: -3px; 
-    line-height: 0.8;
-    filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.5));
+#splash-title {
+    font-size: clamp(40px, 10vw, 80px);
+    font-weight: 900;
+    background: linear-gradient(180deg, #fff 30%, var(--cyan) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 0.9;
+    filter: drop-shadow(0 0 15px var(--border-glow));
 }
 
-.aaa-button {
-    background: rgba(0, 255, 255, 0.1);
-    border: 3px solid var(--cyan);
-    color: var(--cyan);
-    font-family: 'Orbitron';
-    font-size: 18px; font-weight: 900; letter-spacing: 3px;
-    padding: 20px 50px;
-    cursor: pointer;
-    clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%); /* Slanted Snap Style */
-    transition: all 0.2s ease;
-}
-
-.aaa-button:active { transform: scale(0.95); background: var(--cyan); color: #000; }
-
-/* 4. SCREEN 2: MAIN MENU (SNAP HUD) */
+/* ==========================================
+   5. MAIN MENU (REWRITTEN FOR FLEX)
+   ========================================== */
 #menu-screen {
-    justify-content: space-between;
-    padding: 50px 0 20px 0;
     background: linear-gradient(rgba(5,5,10,0.8), rgba(5,5,10,0.8)), 
-                url('https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=2070&auto=format&fit=crop');
+                url('https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=2070&auto=format&fit=crop') center/cover;
 }
 
 #menu-top {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 80px;
+    width: 100%;
 }
 
-#menu-player { display: flex; align-items: center; gap: 12px; }
+#menu-player {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
 
 #player-avatar {
-    width: 55px; height: 55px;
-    border: 3px solid var(--magenta);
-    border-radius: 12px; /* Square with rounded corners like Snap */
-    background: url('https://placehold.co/100x100/222/ff0055?text=AVATAR') center/cover;
-    box-shadow: 0 0 15px rgba(255, 0, 85, 0.4);
-}
-
-#player-name { font-size: 20px; font-weight: 900; letter-spacing: 1px; }
-
-.resource-pill {
-    background: var(--panel-glass);
-    border-radius: 20px; padding: 4px 12px;
-    font-size: 14px; font-weight: 700;
-    display: flex; align-items: center; gap: 6px;
-    border: 1px solid rgba(255,255,255,0.1);
+    width: 50px;
+    height: 50px;
+    border: 2px solid var(--magenta);
+    border-radius: 10px;
+    background: #222;
+    box-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
 }
 
 #menu-center {
-    flex: 1; display: flex; flex-direction: column; 
-    justify-content: center; align-items: center;
+    flex: 1; /* Pushes top and bottom apart */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 0; /* Critical for flex stability */
 }
 
 #seasonal-mission-banner {
-    width: 85%; max-width: 400px;
-    height: 220px;
-    background: linear-gradient(135deg, #222 0%, #000 100%);
+    width: 100%;
+    max-width: 400px;
+    aspect-ratio: 16 / 9; /* Maintains shape across devices */
+    background: linear-gradient(135deg, #111 0%, #000 100%);
     border: 2px solid var(--magenta);
-    border-radius: 10px;
+    border-radius: 15px;
     position: relative;
     overflow: hidden;
-    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-/* Diagonal stripe overlay for that Snap look */
-#seasonal-mission-banner::before {
-    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,0,85,0.05) 10px, rgba(255,0,85,0.05) 20px);
+#menu-bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 25px;
+    padding-bottom: 20px;
 }
-
-#menu-bottom { width: 100%; align-items: center; gap: 15px; }
 
 #play-btn-wrapper {
-    width: 90%; max-width: 350px; position: relative;
+    width: 100%;
+    max-width: 320px;
+    position: relative;
 }
 
 .play-button {
-    width: 100%; padding: 22px;
-    font-size: 36px; font-weight: 900;
-    color: #fff;
-    background: linear-gradient(to bottom, #222, #0066ff, #00ffff);
-    border: none; border-radius: 8px;
+    width: 100%;
+    padding: 20px;
+    font-size: 32px;
+    font-weight: 900;
     font-style: italic;
-    box-shadow: 0 8px 0 #003366, 0 15px 30px rgba(0,255,255,0.3);
+    color: #fff;
+    background: linear-gradient(to bottom, #0055ff, var(--cyan));
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 6px 0 #003366, 0 15px 30px var(--border-glow);
     cursor: pointer;
+    transition: transform 0.1s;
 }
 
-.play-button:active { transform: translateY(6px); box-shadow: 0 2px 0 #003366; }
+.play-button:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #003366;
+}
 
 #current-deck-label {
-    position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
-    background: var(--magenta); padding: 4px 15px; font-size: 12px; font-weight: 900;
-    border-radius: 4px; z-index: 2;
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--magenta);
+    padding: 4px 16px;
+    font-size: 11px;
+    font-weight: 900;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 5;
 }
 
-/* 5. BATTLE HUD (Over 3D Canvas) */
-#battle-screen { padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0; }
+/* ==========================================
+   6. BATTLE HUD
+   ========================================== */
+#score-container {
+    display: flex;
+    justify-content: space-around;
+    padding-top: 20px;
+}
 
 .lane-score, .enemy-score {
-    width: 60px; height: 60px;
+    width: 65px;
+    height: 65px;
     background: var(--panel-glass);
     border: 3px solid var(--cyan);
     border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 28px; font-weight: 900;
-    text-shadow: 0 0 10px var(--cyan);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 900;
+    transition: var(--transition-standard);
 }
 
-/* Add this to your style.css */
-.lane-score.winning {
-    box-shadow: 0 0 30px var(--cyan);
+.enemy-score { border-color: var(--magenta); color: var(--magenta); }
+
+.winning {
     transform: scale(1.15);
-    background: rgba(0, 255, 255, 0.3);
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 0 20px currentColor;
+    background: rgba(255,255,255,0.1);
 }
-
-.enemy-score.winning {
-    box-shadow: 0 0 30px var(--magenta);
-    transform: scale(1.15);
-    background: rgba(255, 0, 85, 0.3);
-}
-
-
-.enemy-score { border-color: var(--magenta); text-shadow: 0 0 10px var(--magenta); color: var(--magenta); }
 
 #bottom-bar {
-    position: absolute; bottom: 40px; width: 100%;
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 0 30px; box-sizing: border-box;
+    margin-top: auto; /* Sticks to bottom of flex screen */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
 }
 
 .mana-hex {
-    width: 80px; height: 80px;
-    background: rgba(0, 255, 255, 0.15);
-    border: 4px solid var(--cyan);
+    width: 75px;
+    height: 75px;
+    background: rgba(0, 255, 255, 0.1);
+    border: 3px solid var(--cyan);
     clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 34px; font-weight: 900;
-    filter: drop-shadow(0 0 15px var(--cyan));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    font-weight: 900;
+    color: var(--cyan);
 }
 
-/* 6. 3D CONTAINER */
-#game-container {
-    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    z-index: 1; pointer-events: none; opacity: 0;
-}
-
-/* ANIMATIONS */
+/* ==========================================
+   7. ANIMATIONS
+   ========================================== */
 @keyframes logoFloat {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-15px); }
 }
+
+/* Utility to hide elements cleanly */
+.hidden { display: none !important; }
