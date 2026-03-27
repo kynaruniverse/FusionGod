@@ -65,14 +65,18 @@ class GameBootstrapper {
      * Transition from Menu to the Deck Selection Screen
      */
     openDeckBuilder() {
-        // Hide Main Menu
-        document.getElementById('menu-layer').style.display = 'none';
-
-        // Initialize Deck Builder with a callback for when the user clicks "LOCK DECK"
-        new DeckBuilder((selectedDeck) => {
-            this.startBattle(selectedDeck);
-        });
+        // 1. Visual Feedback
+        const menu = document.getElementById('menu-layer');
+        gsap.to(menu, { opacity: 0, duration: 0.5, onComplete: () => {
+            menu.style.display = 'none';
+            
+            // 2. Launch Deck Builder
+            new DeckBuilder((selectedDeck) => {
+                this.startBattle(selectedDeck);
+            });
+        }});
     }
+
 
     /**
      * The "AAA Transition": Fly camera into the Arena and spawn the chosen deck

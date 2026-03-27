@@ -11,9 +11,12 @@ export class DeckBuilder {
         this.selectedCards = [];
         this.container = document.createElement('div');
         this.container.id = 'deck-builder-screen';
+        this.container.style.display = 'flex'; // Force visibility
+        this.container.style.pointerEvents = 'auto'; // Enable clicks
         document.body.appendChild(this.container);
         this.render();
     }
+
 
     render() {
         this.container.innerHTML = `
